@@ -4,9 +4,8 @@ FROM python:3.10
 WORKDIR /app
 
 RUN ls
-# Copy necessary files to the container
+
 COPY requirements.txt ./
-COPY src .
 
 # Create a virtual environment in the container
 RUN python3 -m venv .venv
@@ -16,6 +15,8 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # Install Python dependencies from the requirements file
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src .
 
 # Get the models from Hugging Face to bake into the container
 RUN python3 app/download_models.py

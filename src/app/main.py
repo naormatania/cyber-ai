@@ -2,10 +2,33 @@ from fastapi import FastAPI, Request
 import cyner
 from tner import TransformersNER
 from nltk.tokenize import WhitespaceTokenizer
+from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
+from transformers import AutoTokenizer
 
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
+
+def gen_chunk_512(tokenizer, text):
+   spans = list(pt().span_tokenize(text))
+   print("num spans: ", len(spans))
+   num_tokens = 0
+   chunk = ""
+   for span in spans:
+      sub_text = text[span[0]: span[1]]
+      tokens = tokenizer.tokenize(sub_text)
+      print("num tokens: ", len(tokens))
+      if num_tokens + len(tokens) > 512:
+        yield chunk
+        chunk = sub_text
+        num_tokens = len(tokens)
+      elif chunk == "":
+        chunk = sub_text
+        num_tokens = len(tokens)
+      else:
+        chunk = " ".join([chunk, sub_text])
+        num_tokens = num_tokens + len(tokens)
+   yield chunk
 
 def fix_text_cyner(sent, entity):
   sent_spans = WhitespaceTokenizer().span_tokenize(sent)
@@ -29,11 +52,15 @@ async def cyner_endpoint(request: Request):
     if not text:
         return {'error': 'Text to process not found'}
     
-    res = CYNER_MODEL.get_entities_no_split(text)
+    tokenizer = AutoTokenizer.from_pretrained('models/cyner/')
+    chunks = gen_chunk_512(tokenizer, text)
+    
     entities_tuples = []
-    for entity in res:
-        entity_text = fix_text_cyner(entity.decoded_sent, entity)
-        entities_tuples.append((entity.entity_type, entity_text))
+    for chunk in chunks:       
+        res = CYNER_MODEL.get_entities_no_split(chunk)
+        for entity in res:
+            entity_text = fix_text_cyner(entity.decoded_sent, entity)
+            entities_tuples.append((entity.entity_type, entity_text))
     
     return {'entities': entities_tuples}
 
@@ -45,12 +72,16 @@ async def securebert_ner_endpoint(request: Request):
     if not text:
         return {'error': 'Text to process not found'}
     
-    res = SECUREBERT_NER_MODEL.predict([text])
+    tokenizer = AutoTokenizer.from_pretrained('models/SecureBERT-NER/')
+    chunks = gen_chunk_512(tokenizer, text)
+    
     entities_tuples = []
 
-    last_previous_position = -1
-    previous_type = None
-    for entity in res['entity_prediction'][0]:
+    for chunk in chunks:
+       res = SECUREBERT_NER_MODEL.predict([chunk])
+       last_previous_position = -1
+       previous_type = None
+       for entity in res['entity_prediction'][0]:
         if last_previous_position == (entity['position'][0]-1) and previous_type == entity['type']:
             entities_tuples[-1] = (entity['type'], ' '.join([entities_tuples[-1][1]]+entity['entity']), np.mean([entities_tuples[-1][2]]+entity['probability']), i, sent)
         else:
