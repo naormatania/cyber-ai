@@ -18,12 +18,10 @@ ENV PATH="/app/.venv/bin:$PATH"
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Get the models from Hugging Face to bake into the container
-RUN python3 build/download_models.py
+RUN python3 app/download_models.py
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-ENTRYPOINT [ "uvicorn" ]
-
 # Run main.py when the container launches
-CMD [ "build/main:app" ]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
