@@ -11,14 +11,13 @@ CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length':
 
 def gen_chunk_512(tokenizer, text):
    spans = list(pt().span_tokenize(text))
-   print("num spans: ", len(spans))
    num_tokens = 0
    chunk = ""
    for span in spans:
       sub_text = text[span[0]: span[1]]
       tokens = tokenizer.tokenize(sub_text)
-      print("num tokens: ", len(tokens))
       if num_tokens + len(tokens) > 512:
+        print(f"processing chunk of with {num_tokens} tokens")
         yield chunk
         chunk = sub_text
         num_tokens = len(tokens)
@@ -28,6 +27,7 @@ def gen_chunk_512(tokenizer, text):
       else:
         chunk = " ".join([chunk, sub_text])
         num_tokens = num_tokens + len(tokens)
+   print(f"processing chunk of with {num_tokens} tokens")
    yield chunk
 
 def fix_text_cyner(sent, entity):
