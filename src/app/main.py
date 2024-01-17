@@ -5,9 +5,12 @@ from nltk.tokenize import WhitespaceTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
 from transformers import AutoTokenizer
+import torch
 
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
+
+_ = torch.set_grad_enabled(False)
 
 def gen_chunk_512(tokenizer, text):
    spans = list(pt().span_tokenize(text))
