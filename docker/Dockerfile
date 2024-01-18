@@ -25,5 +25,13 @@ COPY src .
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
+ENV TQDM_DISABLE 1
+
+ARG INTRAOP_THREADS
+ARG INTEROP_THREADS
+
+ENV INTRAOP_THREADS ${INTRAOP_THREADS}
+ENV INTEROP_THREADS ${INTEROP_THREADS}
+
 # Run main.py when the container launches
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

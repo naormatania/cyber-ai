@@ -6,9 +6,16 @@ from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
 from transformers import AutoTokenizer
 import torch
+import os
 
 _ = torch.set_grad_enabled(False)
-#torch.set_num_threads(4)
+print("default num threads for intraop parallelism: ", torch.get_num_threads())
+torch.set_num_threads(int(os.environ['INTRAOP_THREADS'])) # intraop parallelism on CPU
+print("current num threads for intraop parallelism: ", torch.get_num_threads())
+
+print("default num threads for interop parallelism: ", torch.get_num_interop_threads())
+torch.set_num_interop_threads(int(os.environ['INTEROP_THREADS'])) # interop parallelism on CPU
+print("current num threads for interop parallelism: ", torch.get_num_interop_threads())
 
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
@@ -21,7 +28,6 @@ def gen_chunk_512(tokenizer, text):
       sub_text = text[span[0]: span[1]]
       tokens = tokenizer.tokenize(sub_text)
       if num_tokens + len(tokens) > 512:
-        print(f"processing chunk of with {num_tokens} tokens")
         yield chunk
         chunk = sub_text
         num_tokens = len(tokens)
@@ -31,7 +37,6 @@ def gen_chunk_512(tokenizer, text):
       else:
         chunk = " ".join([chunk, sub_text])
         num_tokens = num_tokens + len(tokens)
-   print(f"processing chunk of with {num_tokens} tokens")
    yield chunk
 
 def fix_text_cyner(sent, entity):
@@ -87,7 +92,7 @@ async def securebert_ner_endpoint(request: Request):
        previous_type = None
        for entity in res['entity_prediction'][0]:
         if last_previous_position == (entity['position'][0]-1) and previous_type == entity['type']:
-            entities_tuples[-1] = (entity['type'], ' '.join([entities_tuples[-1][1]]+entity['entity']), np.mean([entities_tuples[-1][2]]+entity['probability']), i, sent)
+            entities_tuples[-1] = (entity['type'], ' '.join([entities_tuples[-1][1]]+entity['entity']))
         else:
             entities_tuples.append((entity['type'], ' '.join(entity['entity'])))
         last_previous_position = entity['position'][-1]
