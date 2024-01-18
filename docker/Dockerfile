@@ -1,11 +1,10 @@
-FROM python:3.10
+FROM python:3.10 as base
 
 # Set the working directory within the container
 WORKDIR /app
 
-RUN ls
-
 COPY requirements.txt ./
+COPY build .
 
 # Create a virtual environment in the container
 RUN python3 -m venv .venv
@@ -16,10 +15,12 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Install Python dependencies from the requirements file
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src .
-
 # Get the models from Hugging Face to bake into the container
-RUN python3 app/download_models.py
+RUN python3 download_models.py
+
+FROM base as build
+
+COPY src .
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000

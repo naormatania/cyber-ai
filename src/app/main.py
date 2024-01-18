@@ -7,10 +7,11 @@ from models.consts import LABEL2ID
 from transformers import AutoTokenizer
 import torch
 
+_ = torch.set_grad_enabled(False)
+#torch.set_num_threads(4)
+
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
-
-_ = torch.set_grad_enabled(False)
 
 def gen_chunk_512(tokenizer, text):
    spans = list(pt().span_tokenize(text))

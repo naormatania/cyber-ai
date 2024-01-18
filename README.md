@@ -2,7 +2,8 @@
 
 ## Run the container
 ```
-docker build -t localbuild:ner_service -f docker/Dockerfile . && docker run -p 8000:8000 -it localbuild:ner_service
+docker build -t localbuild:ner_service --target base -f docker/Dockerfile .
+docker build -t localbuild:ner_service --target build -f docker/Dockerfile . && docker run -p 8000:8000 -it localbuild:ner_service
 ```
 
 ## Query the container
