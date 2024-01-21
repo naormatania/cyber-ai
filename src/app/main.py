@@ -18,10 +18,10 @@ print("default num threads for interop parallelism: ", torch.get_num_interop_thr
 torch.set_num_interop_threads(int(os.environ['INTEROP_THREADS'])) # interop parallelism on CPU
 print("current num threads for interop parallelism: ", torch.get_num_interop_threads())
 
-SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
-print("original_model: ", SECUREBERT_NER_MODEL.model)
-SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
-print("converted_model: ", SECUREBERT_NER_MODEL.model)
+SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512, label2id=LABEL2ID)
+# print("original_model: ", SECUREBERT_NER_MODEL.model)
+# SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
+# print("converted_model: ", SECUREBERT_NER_MODEL.model)
 
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
 
