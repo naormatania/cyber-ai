@@ -5,6 +5,7 @@ from nltk.tokenize import WhitespaceTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
 from transformers import AutoTokenizer
+from optimum.bettertransformer import BetterTransformer
 import torch
 import os
 
@@ -18,6 +19,10 @@ torch.set_num_interop_threads(int(os.environ['INTEROP_THREADS'])) # interop para
 print("current num threads for interop parallelism: ", torch.get_num_interop_threads())
 
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=128, label2id=LABEL2ID)
+print("original_model: ", SECUREBERT_NER_MODEL.model)
+SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
+print("converted_model: ", SECUREBERT_NER_MODEL.model)
+
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
 
 def gen_chunk_512(tokenizer, text):
