@@ -43,4 +43,4 @@ for i in range(len(ds)):
     total_num_entities = total_num_entities + num_entities
     print(f"elapsed_time={elapsed_time}, num_entities={num_entities}, padding_precentage={padding_precentage:.0%}")
 
-print(f"avg_time={np.mean(time_arr)}, std_time={np.std(time_arr)}, total_num_entities={total_num_entities}, padding_precentage={np.mean(padding_precentage_arr):.0%}")
+print(f"avg_time={np.mean(time_arr)}, std_time={np.std(time_arr)}, median_time={np.median(time_arr)}, total_num_entities={total_num_entities}, padding_precentage={np.mean(padding_precentage_arr):.0%}")

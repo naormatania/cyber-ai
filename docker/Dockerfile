@@ -32,6 +32,7 @@ ARG INTEROP_THREADS
 
 ENV INTRAOP_THREADS ${INTRAOP_THREADS}
 ENV INTEROP_THREADS ${INTEROP_THREADS}
+ENV COMPLETE_TEXT_CYNER 1
 
 # Run main.py when the container launches
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
