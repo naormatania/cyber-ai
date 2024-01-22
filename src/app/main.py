@@ -24,6 +24,8 @@ SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512,
 print("original secure-bert-ner model: ", SECUREBERT_NER_MODEL.model)
 SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
 print("converted secure-bert-ner model: ", SECUREBERT_NER_MODEL.model)
+# Unfortunately compile doesn't work with BetterTransformer and BetterTransformer yields same or better results
+#SECUREBERT_NER_MODEL.model = torch.compile(SECUREBERT_NER_MODEL.model, mode="max-autotune-no-cudagraphs")
 
 _ = SECUREBERT_NER_MODEL.predict([WARMUP_TEXT])
 
@@ -31,6 +33,8 @@ CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length':
 print("original cyner model: ", CYNER_MODEL.classifier.model)
 CYNER_MODEL.classifier.model = BetterTransformer.transform(CYNER_MODEL.classifier.model)
 print("converted cyner model: ", CYNER_MODEL.classifier.model)
+# Unfortunately compile doesn't work with BetterTransformer and BetterTransformer yields same or better results 
+#CYNER_MODEL.classifier.model = torch.compile(CYNER_MODEL.classifier.model)
 
 _ = CYNER_MODEL.get_entities_no_split(WARMUP_TEXT)
 

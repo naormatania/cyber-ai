@@ -1,5 +1,5 @@
-git+https://github.com/naormatania/tner.git
-git+https://github.com/naormatania/CyNER.git
+git+https://github.com/naormatania/tner.git@master
+git+https://github.com/naormatania/CyNER.git@main
 fastapi==0.65.2
 optimum
 nltk
