@@ -64,7 +64,7 @@ def complete_text_cyner(sent, sent_spans, entity):
        start_position = span[0]
     if span[0] < end_position and end_position < span[1]:
        end_position = span[1]
-       
+  
   return sent[start_position:end_position]
 
 app = FastAPI()
