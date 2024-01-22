@@ -19,11 +19,14 @@ torch.set_num_interop_threads(int(os.environ['INTEROP_THREADS'])) # interop para
 print("current num threads for interop parallelism: ", torch.get_num_interop_threads())
 
 SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512, label2id=LABEL2ID)
-# print("original_model: ", SECUREBERT_NER_MODEL.model)
-# SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
-# print("converted_model: ", SECUREBERT_NER_MODEL.model)
+print("original secure-bert-ner model: ", SECUREBERT_NER_MODEL.model)
+SECUREBERT_NER_MODEL.model = BetterTransformer.transform(SECUREBERT_NER_MODEL.model)
+print("converted secure-bert-ner model: ", SECUREBERT_NER_MODEL.model)
 
 CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
+print("original cyner model: ", CYNER_MODEL.classifier.model)
+CYNER_MODEL.classifier.model = BetterTransformer.transform(CYNER_MODEL.classifier.model)
+print("converted cyner model: ", CYNER_MODEL.classifier.model)
 
 def gen_chunk_512(tokenizer, text):
    spans = list(pt().span_tokenize(text))
@@ -90,12 +93,11 @@ async def securebert_ner_endpoint(request: Request):
     chunks = gen_chunk_512(tokenizer, text)
     
     entities_tuples = []
-
     for chunk in chunks:
-       res = SECUREBERT_NER_MODEL.predict([chunk])
-       last_previous_position = -1
-       previous_type = None
-       for entity in res['entity_prediction'][0]:
+      res = SECUREBERT_NER_MODEL.predict([chunk])
+      last_previous_position = -1
+      previous_type = None
+      for entity in res['entity_prediction'][0]:
         if last_previous_position == (entity['position'][0]-1) and previous_type == entity['type']:
             entities_tuples[-1] = (entity['type'], ' '.join([entities_tuples[-1][1]]+entity['entity']))
         else:
