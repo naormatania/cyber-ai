@@ -2,8 +2,8 @@
 
 ## Run the container
 ```
-docker build --target base -f docker/Dockerfile .
-docker build --build-arg INTRAOP_THREADS=1 --build-arg INTEROP_THREADS=1 -t localbuild:ner_service --target build -f docker/Dockerfile . && docker run -p 8000:8000 -it localbuild:ner_service
+DOCKER_BUILDKIT=1 docker build --target base -f docker/Dockerfile .
+DOCKER_BUILDKIT=1 docker build --build-arg INTRAOP_THREADS=1 --build-arg INTEROP_THREADS=1 -t localbuild:ner_service --target build -f docker/Dockerfile . && docker run -p 8000:8000 -it localbuild:ner_service
 ```
 
 ## Query the container

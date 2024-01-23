@@ -12,11 +12,19 @@ RUN python3 -m venv .venv
 # Activate the virtual environment
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Get Rust
+#RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+
 # Install Python dependencies from the requirements file
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
 
 # Get the models from Hugging Face to bake into the container
-RUN python3 download_models.py
+RUN mkdir -p models
+COPY models models
+
+# Get the exported ONNX models into the container
+RUN mkdir -p onnx
+COPY build/onnx onnx
 
 FROM base as build
 
