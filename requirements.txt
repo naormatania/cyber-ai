@@ -1,9 +1,8 @@
-#git+https://github.com/naormatania/tner.git@master
+git+https://github.com/naormatania/tner.git@master
 #git+https://github.com/naormatania/CyNER.git@main
+git+https://github.com/naormatania/CyNER.git@6d7d22b264cd73feba0aed2891d33986fead7b44
 #git+https://github.com/naormatania/tner.git@onnx
-git+https://github.com/naormatania/tner.git@92f2bff14a874eacfd72e0da6304c0a71e0bbe87
 #git+https://github.com/naormatania/CyNER.git@onnx
-git+https://github.com/naormatania/CyNER.git@d780766836ca2854ad73b59a0131d9cca86631c7
 fastapi==0.65.2
 optimum
 nltk
