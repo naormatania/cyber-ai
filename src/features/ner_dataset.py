@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
+from transformers import AutoTokenizer
 import math
 
 class NERDataset(Dataset):
@@ -25,3 +26,20 @@ class NERDataset(Dataset):
     def __getitem__(self, idx):
         sents = self.sentences[idx*self.num_sentences:idx*self.num_sentences+self.num_sentences]
         return ' '.join(sents)
+
+class TokenizedNERDataset(Dataset):
+    def __init__(self, ds, tokenizer_name, max_length):
+        self.ds = ds
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_auth_token=False)
+        self.max_length = max_length
+
+    def __len__(self):
+        return len(self.ds)
+
+    def __getitem__(self, idx):
+        text = self.ds[idx]
+        encode = self.tokenizer.encode_plus(
+            text, max_length=self.max_length, padding='max_length', truncation=True
+        )
+        #encode['attention_mask'] = encode['attention_mask'].type(torch.int64)
+        return encode

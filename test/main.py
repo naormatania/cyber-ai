@@ -26,7 +26,7 @@ padding_precentage_arr = []
 total_num_entities = 0
 
 for i in range(len(ds)):
-    text = ds[i]    
+    text = ds[i]
     encode = tokenizer.encode_plus(text)
     num_tokens = len(encode['input_ids'])
     if num_tokens <= 512:
