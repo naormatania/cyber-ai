@@ -16,9 +16,10 @@ TOKENIZER_PATH = {
 
 parser = ArgumentParser()
 parser.add_argument('model', choices=['cyner', 'secner'])
+parser.add_argument('--num_sentences', type=int, default=10)
 args = parser.parse_args()
 
-ds = MalwareTextDataset(num_sentences=10)
+ds = MalwareTextDataset(num_sentences=args.num_sentences)
 tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH[args.model])
 
 time_arr = []

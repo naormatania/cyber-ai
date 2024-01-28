@@ -17,3 +17,9 @@ SecureBERT-NER:
 ```
 curl http://127.0.0.1:8000/ner/secner/ -H "Content-Type: application/json" -v -d '{"text": "Proofpoint report mentions that the German-language messages were turned off once the UK messages were established, indicating a conscious effort to spread FluBot 446833e3f8b04d4c3c2d2288e456328266524e396adbfeba3769d00727481e80 in Android phones."}'
 ```
+
+## Performance test
+With docker container up:
+```
+python3 test/main.py secner --num_sentences=10
+```

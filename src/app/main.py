@@ -8,7 +8,7 @@ from transformers import AutoTokenizer
 from optimum.bettertransformer import BetterTransformer
 import torch
 import os
-import onnxruntime
+# import onnxruntime
 
 _ = torch.set_grad_enabled(False)
 print("default num threads for intraop parallelism: ", torch.get_num_threads())
@@ -21,13 +21,14 @@ print("current num threads for interop parallelism: ", torch.get_num_interop_thr
 
 optimization = os.environ['OPTIMIZATION']
 if optimization == "ONNX":
-  options = onnxruntime.SessionOptions()
-  options.intra_op_num_threads = int(os.environ['INTRAOP_THREADS'])
-  options.inter_op_num_threads = int(os.environ['INTEROP_THREADS'])
-  SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID, session_options=options)
-  #SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID)
-  CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512, 'session_options': options})
-  #CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512})
+  # options = onnxruntime.SessionOptions()
+  # options.intra_op_num_threads = int(os.environ['INTRAOP_THREADS'])
+  # options.inter_op_num_threads = int(os.environ['INTEROP_THREADS'])
+  # SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID, session_options=options)
+  # #SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID)
+  # CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512, 'session_options': options})
+  # #CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512})
+  pass
 else:
   SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512, label2id=LABEL2ID)
   CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
