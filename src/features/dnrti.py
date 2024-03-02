@@ -11,10 +11,10 @@ _LINE_RE = re.compile(r"((\S+)(\s+)?)+([IOB])-?(\S+)?")
 
 def prepare_dnrti_dataset():
     os.system("curl -L -O https://github.com/SCreaMxp/DNRTI-A-Large-scale-Dataset-for-Named-Entity-Recognition-in-Threat-Intelligence/raw/master/DNRTI.rar")
-    os.system("unrar x /content/DNRTI.rar")
+    os.system("unrar x DNRTI.rar")
     os.mkdir("DNRTI")
 
-    for filepath in ['/content/test.txt', '/content/train.txt', '/content/valid.txt']:
+    for filepath in ['test.txt', 'train.txt', 'valid.txt']:
         lines = open(filepath, 'r').readlines()
         tokens = []
         for i, line in enumerate(lines):
@@ -25,7 +25,7 @@ def prepare_dnrti_dataset():
 
         open(f"DNRTI/{os.path.basename(filepath)}", "w").write(text)
 
-    dataset = load_dataset("text", data_dir="/content/DNRTI")
+    dataset = load_dataset("text", data_dir="DNRTI")
     dataset.push_to_hub("naorm/DNRTI")
 
 class DNRTIDataset(NERDataset):
