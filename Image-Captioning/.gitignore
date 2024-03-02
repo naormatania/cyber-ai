@@ -1,0 +1,9 @@
+.DS_Store
+.ipynb_checkpoints/
+**/__pycache__/
+build/onnx/
+models/
+datasets/desktop-ui-dataset
+datasets/website-screenshots
+datasets/coco
+notebooks/my-env

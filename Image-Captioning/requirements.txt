@@ -1,0 +1,10 @@
+datasets
+transformers
+torch
+python-multipart
+fastapi
+uvicorn
+pillow
+sacrebleu
+salesforce-lavis
+rouge_score
