@@ -6,9 +6,12 @@ from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
 from transformers import AutoTokenizer
 from optimum.bettertransformer import BetterTransformer
+from collections import namedtuple
 import torch
 import os
 # import onnxruntime
+
+Entity = namedtuple("Entity", "type text start_span end_span")
 
 _ = torch.set_grad_enabled(False)
 print("default num threads for intraop parallelism: ", torch.get_num_threads())
@@ -74,13 +77,15 @@ def complete_text_cyner(sent, sent_spans, entity):
   start_position = entity.start
   end_position = entity.end
 
-  for span in sent_spans:
-    if span[0] < start_position and start_position < span[1]:
+  for i, span in enumerate(sent_spans):
+    if span[0] <= start_position and start_position < span[1]:
        start_position = span[0]
-    if span[0] < end_position and end_position < span[1]:
+       start_span = i
+    if span[0] < end_position and end_position <= span[1]:
        end_position = span[1]
+       end_span = i
   
-  return sent[start_position:end_position]
+  return sent[start_position:end_position], start_span, end_span
 
 app = FastAPI()
 
@@ -101,8 +106,8 @@ async def cyner_endpoint(request: Request):
           sent = res[0].decoded_sent
           sent_spans = WhitespaceTokenizer().span_tokenize(sent)
           for entity in res:
-            entity_text = complete_text_cyner(sent, sent_spans, entity)
-            entities_tuples.append((entity.entity_type, entity_text))
+            entity_text, start_span, end_span = complete_text_cyner(sent, sent_spans, entity)
+            entities_tuples.append(Entity(entity.entity_type, entity_text, start_span, end_span))
     
     return {'entities': entities_tuples}
 
@@ -123,9 +128,10 @@ async def securebert_ner_endpoint(request: Request):
       previous_type = None
       for entity in res['entity_prediction'][0]:
         if last_previous_position == (entity['position'][0]-1) and previous_type == entity['type']:
-            entities_tuples[-1] = (entity['type'], ' '.join([entities_tuples[-1][1]]+entity['entity']))
+            entities_tuples[-1] = Entity(entity['type'], ' '.join([entities_tuples[-1].text]+entity['entity']), entities_tuples[-1].start_span, entity['position'][0])
         else:
-            entities_tuples.append((entity['type'], ' '.join(entity['entity'])))
+            start_span = end_span = entity['position'][-1]
+            entities_tuples.append(Entity(entity['type'], ' '.join(entity['entity']), start_span, end_span))
         last_previous_position = entity['position'][-1]
         previous_type = entity['type']
     

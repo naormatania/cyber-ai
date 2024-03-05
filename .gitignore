@@ -1,4 +1,1 @@
-.ipynb_checkpoints/
-**/__pycache__/
-build/onnx/
-models/
+.DS_Store

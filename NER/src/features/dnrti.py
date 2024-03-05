@@ -5,28 +5,30 @@ import nltk
 import os
 import pathlib
 import re
+import shutil
 from nltk.tokenize.treebank import TreebankWordDetokenizer
+from huggingface_hub import login
+from argparse import ArgumentParser
 
-_LINE_RE = re.compile(r"((\S+)(\s+)?)+([IOB])-?(\S+)?")
+_LINE_RE = re.compile(r"((\S+)(\s+)?)+(O|(([IB])-(\S+)))$")
 
 def prepare_dnrti_dataset():
-    os.system("curl -L -O https://github.com/SCreaMxp/DNRTI-A-Large-scale-Dataset-for-Named-Entity-Recognition-in-Threat-Intelligence/raw/master/DNRTI.rar")
-    os.system("unrar x DNRTI.rar")
     os.mkdir("DNRTI")
 
-    for filepath in ['test.txt', 'train.txt', 'valid.txt']:
+    for filepath in ['datasets/DNRTI/test.txt', 'datasets/DNRTI/train.txt', 'datasets/DNRTI/valid.txt']:
         lines = open(filepath, 'r').readlines()
         tokens = []
         for i, line in enumerate(lines):
             if line == "\n" or line == "O\n" or line == " O\n":
                 continue
-            tokens.append(re.match(_LINE_RE, line).group(1).rstrip())
+            tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(2))
         text = TreebankWordDetokenizer().detokenize(tokens)
 
         open(f"DNRTI/{os.path.basename(filepath)}", "w").write(text)
 
     dataset = load_dataset("text", data_dir="DNRTI")
     dataset.push_to_hub("naorm/DNRTI")
+    shutil.rmtree('DNRTI')
 
 class DNRTIDataset(NERDataset):
     def __init__(self, max_items = None, num_sentences = 1):
@@ -37,3 +39,11 @@ class DNRTIDataset(NERDataset):
         dnrti = pd.concat([train, validation, test])
 
         super().__init__(dnrti, max_items, num_sentences)
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument('hf_key', type=str)
+    args = parser.parse_args()
+
+    login(args.hf_key)
+    prepare_dnrti_dataset()
