@@ -46,8 +46,10 @@ GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
 # BLIP2_MODEL = BLIP2_MODEL.to(DEVICE)
 # BLIP2_PROCESSOR = Blip2Processor.from_pretrained(BLIP2_MODEL_ID)
 
-LBLIP2_MODEL, LBLIP2_PROCESSORS, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True, device=DEVICE)
-LBLIP2_PROCESSOR = LBLIP2_PROCESSORS["eval"]
+# LBLIP2_MODEL_BASE, LBLIP2_PROCESSORS_BASE, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True, device=DEVICE)
+LBLIP2_MODEL_LARGE, LBLIP2_PROCESSORS_LARGE, _ = load_model_and_preprocess(name="blip_caption", model_type="large_coco", is_eval=True, device=DEVICE)
+LBLIP2_PROCESSOR = LBLIP2_PROCESSORS_LARGE["eval"]
+LBLIP2_MODEL = LBLIP2_MODEL_LARGE
 
 # ONNX is not supported
 optimization = os.environ['OPTIMIZATION']
