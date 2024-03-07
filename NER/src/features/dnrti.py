@@ -22,7 +22,7 @@ def read_iob_tokens(full_path):
                 yield tokens
             tokens = []
             continue
-        tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(1))
+        tokens.append(re.match(_LINE_RE, line).group(1))
     if len(tokens) != 0:
         yield tokens
 
@@ -34,7 +34,20 @@ def prepare_dnrti_dataset():
         full_path = f'datasets/DNRTI/{name}.txt'
         lines = open(full_path, 'r').readlines()
         lines = [line for line in lines if line != "O\n" and line != " O\n"]
-        total_lines.extend(lines)
+        lines = [line.rstrip().lstrip() for line in lines]
+        new_line = False
+        for line in lines:
+            if line == "":
+                if not new_line:
+                    total_lines.append("\n")
+                    new_line = True
+                continue
+            new_line = False
+            match_ = re.match(_LINE_RE, line)
+            tokens = match_.group(1).split()
+            class_ = match_.group(5)
+            for token in tokens:
+                total_lines.append(f"{token} {class_}\n")
     open("DNRTI/iob.txt", "w").writelines(total_lines)
 
     detokenizer = TreebankWordDetokenizer()
