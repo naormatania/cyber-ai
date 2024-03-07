@@ -12,28 +12,34 @@ from torch.utils.data import Dataset
 
 _LINE_RE = re.compile(r"((\S+)(\s+)?)+(O|(([IB])-(\S+)))$")
 
+def read_iob_tokens(full_path):
+    lines = open(full_path, 'r').readlines()
+    lines = [line for line in lines if line != "O\n" and line != " O\n"]
+    tokens = []
+    for line in lines:
+        if line == "\n":
+            if len(tokens) != 0:
+                yield tokens
+            tokens = []
+            continue
+        tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(2))
+    if len(tokens) != 0:
+        yield tokens
+
 def prepare_dnrti_dataset():
     os.mkdir("DNRTI")
 
     total_lines = []
-    total_sentences = []
     for name in ['test', 'train', 'valid']:
         full_path = f'datasets/DNRTI/{name}.txt'
         lines = open(full_path, 'r').readlines()
         lines = [line for line in lines if line != "O\n" and line != " O\n"]
-        sentences = []
-        tokens = []
-        for line in lines:
-            if line == "\n":
-                sentences.append(TreebankWordDetokenizer().detokenize(tokens) + "\n")
-                tokens = []
-                continue
-            tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(2))
-        sentences.append(TreebankWordDetokenizer().detokenize(tokens))
         total_lines.extend(lines)
-        total_sentences.extend(sentences)
-    open(f"DNRTI/iob.txt", "w").writelines(lines)
-    open(f"DNRTI/data.txt", "w").writelines(sentences)
+    open("DNRTI/iob.txt", "w").writelines(total_lines)
+
+    detokenizer = TreebankWordDetokenizer()
+    sentences = '\n'.join([detokenizer.detokenize(tokens) for tokens in read_iob_tokens("DNRTI/iob.txt")])
+    open("DNRTI/data.txt", "w").writelines(sentences)
 
     # dataset = load_dataset("text", data_dir="DNRTI")
     # dataset.push_to_hub("naorm/DNRTI")
