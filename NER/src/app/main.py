@@ -77,6 +77,8 @@ def complete_text_cyner(sent, sent_spans, entity):
   start_position = entity.start
   end_position = entity.end
 
+  start_span = -1
+  end_span = -1
   for i, span in enumerate(sent_spans):
     if span[0] <= start_position and start_position < span[1]:
        start_position = span[0]
@@ -104,7 +106,7 @@ async def cyner_endpoint(request: Request):
         res = CYNER_MODEL.get_entities_no_split(chunk)
         if res:
           sent = res[0].decoded_sent
-          sent_spans = WhitespaceTokenizer().span_tokenize(sent)
+          sent_spans = list(WhitespaceTokenizer().span_tokenize(sent))
           for entity in res:
             entity_text, start_span, end_span = complete_text_cyner(sent, sent_spans, entity)
             entities_tuples.append(Entity(entity.entity_type, entity_text, start_span, end_span))
@@ -128,9 +130,10 @@ async def securebert_ner_endpoint(request: Request):
       previous_type = None
       for entity in res['entity_prediction'][0]:
         if last_previous_position == (entity['position'][0]-1) and previous_type == entity['type']:
-            entities_tuples[-1] = Entity(entity['type'], ' '.join([entities_tuples[-1].text]+entity['entity']), entities_tuples[-1].start_span, entity['position'][0])
+            entities_tuples[-1] = Entity(entity['type'], ' '.join([entities_tuples[-1].text]+entity['entity']), entities_tuples[-1].start_span, entity['position'][-1])
         else:
-            start_span = end_span = entity['position'][-1]
+            start_span = entity['position'][0]
+            end_span = entity['position'][-1]
             entities_tuples.append(Entity(entity['type'], ' '.join(entity['entity']), start_span, end_span))
         last_previous_position = entity['position'][-1]
         previous_type = entity['type']

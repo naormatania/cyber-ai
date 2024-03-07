@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/naormatania/code/cyber-ner/src/features")
+sys.path.append("/Users/naormatania/code/cyber-ai/NER/src/features")
 
 from transformers import AutoTokenizer
 from malware_text_db import MalwareTextDataset
