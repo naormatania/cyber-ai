@@ -1,44 +1,57 @@
 from ner_dataset import NERDataset
 from datasets import load_dataset
 import pandas as pd
-import nltk
+import math
 import os
-import pathlib
 import re
 import shutil
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 from huggingface_hub import login
 from argparse import ArgumentParser
+from torch.utils.data import Dataset
 
 _LINE_RE = re.compile(r"((\S+)(\s+)?)+(O|(([IB])-(\S+)))$")
 
 def prepare_dnrti_dataset():
     os.mkdir("DNRTI")
 
-    for filepath in ['datasets/DNRTI/test.txt', 'datasets/DNRTI/train.txt', 'datasets/DNRTI/valid.txt']:
-        lines = open(filepath, 'r').readlines()
+    total_lines = []
+    total_sentences = []
+    for name in ['test', 'train', 'valid']:
+        full_path = f'datasets/DNRTI/{name}.txt'
+        lines = open(full_path, 'r').readlines()
+        lines = [line for line in lines if line != "O\n" and line != " O\n"]
+        sentences = []
         tokens = []
-        for i, line in enumerate(lines):
-            if line == "\n" or line == "O\n" or line == " O\n":
+        for line in lines:
+            if line == "\n":
+                sentences.append(TreebankWordDetokenizer().detokenize(tokens) + "\n")
+                tokens = []
                 continue
             tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(2))
-        text = TreebankWordDetokenizer().detokenize(tokens)
+        sentences.append(TreebankWordDetokenizer().detokenize(tokens))
+        total_lines.extend(lines)
+        total_sentences.extend(sentences)
+    open(f"DNRTI/iob.txt", "w").writelines(lines)
+    open(f"DNRTI/data.txt", "w").writelines(sentences)
 
-        open(f"DNRTI/{os.path.basename(filepath)}", "w").write(text)
+    # dataset = load_dataset("text", data_dir="DNRTI")
+    # dataset.push_to_hub("naorm/DNRTI")
+    # shutil.rmtree('DNRTI')
 
-    dataset = load_dataset("text", data_dir="DNRTI")
-    dataset.push_to_hub("naorm/DNRTI")
-    shutil.rmtree('DNRTI')
+class DNRTIDataset(Dataset):
+    def __init__(self, path = 'DNRTI', max_items = None, num_sentences = 1):
+        self.num_sentences = num_sentences
+        self.sentences = open(f'{path}/data.txt', 'r').readlines()
+        if max_items is not None:
+            self.sentences = self.sentences[:max_items]
 
-class DNRTIDataset(NERDataset):
-    def __init__(self, max_items = None, num_sentences = 1):
-        ds_dnrti = load_dataset("naorm/DNRTI")
-        train = ds_dnrti.data['train'].to_pandas()
-        validation = ds_dnrti.data['validation'].to_pandas()
-        test = ds_dnrti.data['test'].to_pandas()
-        dnrti = pd.concat([train, validation, test])
+    def __len__(self):
+        return math.ceil(len(self.sentences)/self.num_sentences)
 
-        super().__init__(dnrti, max_items, num_sentences)
+    def __getitem__(self, idx):
+        sents = self.sentences[idx*self.num_sentences:idx*self.num_sentences+self.num_sentences]
+        return ' '.join(sents)
 
 if __name__ == "__main__":
     parser = ArgumentParser()

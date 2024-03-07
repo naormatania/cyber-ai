@@ -4,3 +4,5 @@ build/onnx/
 models/
 .DS_Store
 datasets/
+DNRTI/
+test/results/
