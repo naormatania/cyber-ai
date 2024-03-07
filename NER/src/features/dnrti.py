@@ -10,7 +10,7 @@ from huggingface_hub import login
 from argparse import ArgumentParser
 from torch.utils.data import Dataset
 
-_LINE_RE = re.compile(r"((\S+)(\s+)?)+(O|(([IB])-(\S+)))$")
+_LINE_RE = re.compile(r"^(((\S+)(\s+)?)+) (O|(([IB])-(\S+)))$")
 
 def read_iob_tokens(full_path):
     lines = open(full_path, 'r').readlines()
@@ -22,7 +22,7 @@ def read_iob_tokens(full_path):
                 yield tokens
             tokens = []
             continue
-        tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(2))
+        tokens.append(re.match(_LINE_RE, line.rstrip().lstrip()).group(1))
     if len(tokens) != 0:
         yield tokens
 

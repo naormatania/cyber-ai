@@ -6,6 +6,8 @@ from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import LABEL2ID
 from transformers import AutoTokenizer
 from optimum.bettertransformer import BetterTransformer
+from flair.models import SequenceTagger
+from flair.data import Sentence
 from collections import namedtuple
 import torch
 import os
@@ -53,6 +55,8 @@ _ = CYNER_MODEL.get_entities_no_split(WARMUP_TEXT)
 
 CYNER_TOKENIZER = AutoTokenizer.from_pretrained('models/cyner/')
 SECNER_TOKENIZER = AutoTokenizer.from_pretrained('models/SecureBERT-NER/')
+
+FLAIR_TAGGER = SequenceTagger.load('ner')
 
 def gen_chunk_512(tokenizer, text):
    spans = list(pt().span_tokenize(text))
@@ -139,6 +143,26 @@ async def securebert_ner_endpoint(request: Request):
         previous_type = entity['type']
     
     return {'entities': entities_tuples}
+
+@app.post('/ner/flair/')
+async def flair_endpoint(request: Request):
+    data = await request.json()
+    text = data.get('text', '')
+
+    if not text:
+        return {'error': 'Text to process not found'}
+    
+    sentence = Sentence(text)
+    FLAIR_TAGGER.predict(sentence)
+    pred = sentence.to_dict(tag_type='ner')
+    print(pred)
+
+    # for x in pred['entities']:
+    #   print(x['labels'][0])
+    #   entities.append(Entity(x['start_pos'], x['end_pos'], x['text'], x['labels'][0]['value'], x['labels'][0]['confidence']))
+    
+    return {'entities': []}
+
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=6000, debug=True)

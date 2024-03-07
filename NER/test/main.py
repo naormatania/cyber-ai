@@ -14,11 +14,8 @@ import re
 from tqdm import tqdm
 
 parser = ArgumentParser()
-parser.add_argument('model', choices=['cyner', 'secner'])
-parser.add_argument('--num_sentences', type=int, default=10)
+parser.add_argument('model', choices=['cyner', 'secner', 'flair'])
 args = parser.parse_args()
-
-ds = DNRTIDataset(num_sentences=args.num_sentences)
 
 list_tokens = read_iob_tokens("DNRTI/iob.txt")
 detokenizer = TreebankWordDetokenizer()
@@ -44,7 +41,7 @@ with open(f'test/results/iob_{args.model}.txt', 'w') as f:
                     token_type = entities[entity_index][0]
             for t, token in enumerate(tokens[token_index:token_index+1+j]):
                 if token_type != 'O':
-                    if t == 0:
+                    if t == 0 and entities[entity_index][2] == i:
                         f.write(f'{token} B-{token_type}\n')
                     else:
                         f.write(f'{token} I-{token_type}\n')
