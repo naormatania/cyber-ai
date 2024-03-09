@@ -77,10 +77,7 @@ def gen_chunk_512(tokenizer, text):
         num_tokens = num_tokens + len(tokens)
    yield chunk
 
-def complete_text_cyner(sent, sent_spans, entity):
-  start_position = entity.start
-  end_position = entity.end
-
+def pos_to_spans(sent, sent_spans, start_position, end_position):
   start_span = -1
   end_span = -1
   for i, span in enumerate(sent_spans):
@@ -112,7 +109,7 @@ async def cyner_endpoint(request: Request):
           sent = res[0].decoded_sent
           sent_spans = list(WhitespaceTokenizer().span_tokenize(sent))
           for entity in res:
-            entity_text, start_span, end_span = complete_text_cyner(sent, sent_spans, entity)
+            entity_text, start_span, end_span = pos_to_spans(sent, sent_spans, entity.start, entity.end)
             entities_tuples.append(Entity(entity.entity_type, entity_text, start_span, end_span))
     
     return {'entities': entities_tuples}
@@ -155,13 +152,15 @@ async def flair_endpoint(request: Request):
     sentence = Sentence(text)
     FLAIR_TAGGER.predict(sentence)
     pred = sentence.to_dict(tag_type='ner')
-    print(pred)
 
-    # for x in pred['entities']:
-    #   print(x['labels'][0])
-    #   entities.append(Entity(x['start_pos'], x['end_pos'], x['text'], x['labels'][0]['value'], x['labels'][0]['confidence']))
+    entities_tuples = []
+    sent = pred['text']
+    sent_spans = list(WhitespaceTokenizer().span_tokenize(sent))
+    for entity in pred['entities']:
+      entity_text, start_span, end_span = pos_to_spans(sent, sent_spans, entity['start_pos'], entity['end_pos'])
+      entities_tuples.append(Entity(entity['labels'][0]['value'], entity_text, start_span, end_span))
     
-    return {'entities': []}
+    return {'entities': entities_tuples}
 
     
 if __name__ == '__main__':

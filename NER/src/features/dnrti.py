@@ -54,11 +54,7 @@ def prepare_dnrti_dataset():
     sentences = '\n'.join([detokenizer.detokenize(tokens) for tokens in read_iob_tokens("DNRTI/iob.txt")])
     open("DNRTI/data.txt", "w").writelines(sentences)
 
-    # dataset = load_dataset("text", data_dir="DNRTI")
-    # dataset.push_to_hub("naorm/DNRTI")
-    # shutil.rmtree('DNRTI')
-
-class DNRTIDataset(Dataset):
+class DNRTIDataset:
     def __init__(self, path = 'DNRTI', max_items = None, num_sentences = 1):
         self.num_sentences = num_sentences
         self.sentences = open(f'{path}/data.txt', 'r').readlines()
