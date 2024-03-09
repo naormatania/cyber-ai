@@ -1,6 +1,7 @@
 import re
-from ner_eval import Evaluator
+import json
 from functools import reduce
+from ner_eval import Evaluator
 
 _LINE_RE = re.compile(r"^(((\S+)(\s+)?)+) (O|(([IB])-(\S+)))$")
 
@@ -61,31 +62,46 @@ print(f'SecureBERT-NER labels: {unique(pred_secner)}')
 # Flair labels: {'LOC', 'O', 'PER', 'ORG', 'MISC'}
 print(f'Flair labels: {unique(pred_flair)}')
 
-
-# Experiment1: Test CyNER/SecNER against True labels (we'll reduce all label to CyNER labels which are the most succint)
-true_to_cyner = {'SamFile': 'Indicator', 'Idus': 'Organization', 'Way': 'System', 
+# Experiment1: Test CyNER/SecNER/Flair against True labels (we'll reduce all label to CyNER labels which are the most succint)
+with open('test/results/exp1.txt', 'w') as f:
+    true_to_cyner = {'SamFile': 'Indicator', 'Idus': 'Organization', 'Way': 'System', 
                  'OffAct': 'System', 'Tool': 'Malware', 'Exp': 'Vulnerability', 'SecTeam': 'Organization', 
                  'HackOrg': 'Organization', 'Org': 'Organization'}
-exp1_true_labels = [build_iob(change_labels(sent, true_to_cyner)) for sent in true]
-secner_to_cyner = {'PROT': 'Indicator', 'IP': 'Indicator', 'FILE': 'Indicator', 'APT': 'Organization', 'MD5': 'Indicator', 'ACT': 'System',
-                   'VULID': 'Vulnerability', 'VULNAME': 'Vulnerability', 'ENCR': 'Indicator', 'DOM': 'Indicator', 'EMAIL': 'Indicator', 'TOOL': 'System',
-                   'SECTEAM': 'Organization', 'SHA2': 'Indicator', 'IDTY': 'Organization', 'OS': 'System', 'URL': 'Indicator', 'MAL': 'Malware', 'LOC': 'Area', 'TIME': 'Time'}
-exp1_secner_labels = [build_iob(change_labels(sent, secner_to_cyner)) for sent in pred_secner]
-exp1_cyner_labels = [build_iob(sent) for sent in pred_cyner]
+    exp1_true_labels = [build_iob(change_labels(sent, true_to_cyner)) for sent in true]
+    secner_to_cyner = {'PROT': 'Indicator', 'IP': 'Indicator', 'FILE': 'Indicator', 'APT': 'Organization', 'MD5': 'Indicator', 'ACT': 'System',
+                    'VULID': 'Vulnerability', 'VULNAME': 'Vulnerability', 'ENCR': 'Indicator', 'DOM': 'Indicator', 'EMAIL': 'Indicator', 'TOOL': 'System',
+                    'SECTEAM': 'Organization', 'SHA2': 'Indicator', 'IDTY': 'Organization', 'OS': 'System', 'URL': 'Indicator', 'MAL': 'Malware', 'LOC': 'Area', 'TIME': 'Time'}
+    exp1_secner_labels = [build_iob(change_labels(sent, secner_to_cyner)) for sent in pred_secner]
+    exp1_cyner_labels = [build_iob(sent) for sent in pred_cyner]
+    flair_to_cyner = {'ORG': 'Organization', 'LOC': 'Area'}
+    exp1_flair_labels = [build_iob(change_labels(sent, flair_to_cyner)) for sent in pred_flair]
 
-# print("################ After:")
-# print(f'true: {exp1_true_labels[:10]}')
-# print(f'secner: {exp1_secner_labels[:10]}')
+    exp1_cyner_evaluator = Evaluator(exp1_true_labels, exp1_cyner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization'])
+    results, results_agg = exp1_cyner_evaluator.evaluate()
+    f.write("################ CyNER results:\n")
+    f.write(json.dumps(results, indent=2) + "\n")
+    f.write(json.dumps(results_agg, indent=2) + "\n")
 
+    exp1_secner_evaluator = Evaluator(exp1_true_labels, exp1_secner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization', 'Time', 'Area'])
+    results, results_agg = exp1_secner_evaluator.evaluate()
+    f.write("################ SecNER results:\n")
+    f.write(json.dumps(results, indent=2) + "\n")
+    f.write(json.dumps(results_agg, indent=2) + "\n")
 
-exp1_cyner_evaluator = Evaluator(exp1_true_labels, exp1_cyner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization'])
-results, results_agg = exp1_cyner_evaluator.evaluate()
-print("################ CyNER results:")
-print(results)
-print(results_agg)
+    exp1_flair_evaluator = Evaluator(exp1_true_labels, exp1_flair_labels, ['Organization', 'Area'])
+    results, results_agg = exp1_flair_evaluator.evaluate()
+    f.write("################ Flair results:\n")
+    f.write(json.dumps(results, indent=2) + "\n")
+    f.write(json.dumps(results_agg, indent=2) + "\n")
 
-exp1_secner_evaluator = Evaluator(exp1_true_labels, exp1_secner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization', 'Time', 'Area'])
-results, results_agg = exp1_secner_evaluator.evaluate()
-print("################ SecNER results:")
-print(results)
-print(results_agg)
+# Experiment2: Test SecNER against True labels on the more specific labels: APT, SECTEAM, IDTY, FILE
+with open('test/results/exp2.txt', 'w') as f:
+    true_to_secner = {'HackOrg': 'APT', 'SecTeam': 'SECTEAM', 'Idus': 'IDTY', 'Org': 'IDTY', 'SamFile': 'FILE'}
+    exp2_true_labels = [build_iob(change_labels(sent, true_to_cyner)) for sent in true]
+    exp2_secner_labels = [build_iob(sent) for sent in pred_secner]
+
+    exp2_secner_evaluator = Evaluator(exp2_true_labels, exp2_secner_labels, ['APT', 'SECTEAM', 'IDTY', 'FILE'])
+    results, results_agg = exp2_secner_evaluator.evaluate()
+    f.write("################ SecNER results:\n")
+    f.write(json.dumps(results, indent=2) + "\n")
+    f.write(json.dumps(results_agg, indent=2) + "\n")
