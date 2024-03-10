@@ -1,6 +1,5 @@
 import re
 import json
-from functools import reduce
 from ner_eval import Evaluator
 
 _LINE_RE = re.compile(r"^(((\S+)(\s+)?)+) (O|(([IB])-(\S+)))$")
@@ -26,17 +25,29 @@ def read_iob_tokens(full_path):
 def sent2labels(sent, tokens_to_discard=[',','.']):
     return [(token[1], token[2]) for token in sent if token[0] not in tokens_to_discard]
 
-def sent2tokens(sent, tokens_to_discard=[',','.']):
-    return [token[0] for token in sent if token[0] not in tokens_to_discard]
-
 def sent2label_tokens(sent, label, tokens_to_discard=[',','.']):
     return [token[0] for token in sent if token[0] not in tokens_to_discard and token[2] == label]
 
 def change_labels(sent, mapping):
     return [(postag, label) if label not in mapping else (postag, mapping[label]) for postag, label in sent]
 
-def unique(sents):
-    return set(reduce(lambda a, b: a+b, sents))
+def label_count(sents):
+    counts = {}
+    for sent in sents:
+        for token in sent:
+            label = token[1]
+            if label is None:
+                continue
+            if label not in counts:
+                counts[label] = 1
+            else:
+                counts[label] = counts[label] + 1
+    return counts
+
+def write_label_count(f, sents, name):
+    count = label_count(sents)
+    f.write(f'{name} label count (Total - {sum(count.values())}):\n')
+    f.write(json.dumps(count)+"\n")
 
 def build_iob(sent, default='O'):
     return [f'{postag}-{label}' if label is not None else default for postag, label in sent]
@@ -46,21 +57,21 @@ cyner_sents = list(read_iob_tokens('test/results/iob_cyner.txt'))
 secner_sents = list(read_iob_tokens('test/results/iob_secner.txt'))
 flair_sents = list(read_iob_tokens('test/results/iob_flair.txt'))
 
-tokens = [sent2tokens(sent) for sent in true_sents]
 true = [sent2labels(sent) for sent in true_sents]
 pred_cyner = [sent2labels(sent) for sent in cyner_sents]
 pred_secner = [sent2labels(sent) for sent in secner_sents]
 pred_flair = [sent2labels(sent) for sent in flair_sents]
 
-# True labels: {'Purp', 'SamFile', 'Idus', 'Way', 'OffAct', 'Area', 'Tool', 'Exp', 'O', 'Time', 'SecTeam', 'Features', 'HackOrg', 'Org'}
-print(f'True labels: {unique(true)}')
-# CyNER labels: {'Vulnerability', 'Indicator', 'O', 'Malware', 'System', 'Organization'}
-print(f'CyNER labels: {unique(pred_cyner)}')
-# SecureBERT-NER labels: {'PROT', 'IP', 'FILE', 'O', 'APT', 'MD5', 'ACT', 'VULID', 'VULNAME', 'ENCR', 'DOM', 'EMAIL', 'TOOL', 'SECTEAM',
-# 'SHA2', 'IDTY', 'OS', 'URL', 'MAL', 'LOC', 'TIME'}
-print(f'SecureBERT-NER labels: {unique(pred_secner)}')
-# Flair labels: {'LOC', 'O', 'PER', 'ORG', 'MISC'}
-print(f'Flair labels: {unique(pred_flair)}')
+with open('test/results/label_counts.txt', 'w') as f:
+    # True labels: {'Purp', 'SamFile', 'Idus', 'Way', 'OffAct', 'Area', 'Tool', 'Exp', 'O', 'Time', 'SecTeam', 'Features', 'HackOrg', 'Org'}
+    write_label_count(f, true, 'True')
+    # CyNER labels: {'Vulnerability', 'Indicator', 'O', 'Malware', 'System', 'Organization'}
+    write_label_count(f, pred_cyner, 'CyNER')
+    # SecureBERT-NER labels: {'PROT', 'IP', 'FILE', 'O', 'APT', 'MD5', 'ACT', 'VULID', 'VULNAME', 'ENCR', 'DOM', 'EMAIL', 'TOOL', 'SECTEAM',
+    # 'SHA2', 'IDTY', 'OS', 'URL', 'MAL', 'LOC', 'TIME'}
+    write_label_count(f, pred_secner, 'SecureBERT-NER')
+    # Flair labels: {'LOC', 'O', 'PER', 'ORG', 'MISC'}
+    write_label_count(f, pred_flair, 'Flair')
 
 # Experiment1: Test CyNER/SecNER/Flair against True labels (we'll reduce all label to CyNER labels which are the most succint)
 with open('test/results/exp1.txt', 'w') as f:

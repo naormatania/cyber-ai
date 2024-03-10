@@ -1,0 +1,8 @@
+True label count (Total - 36768):
+{"SecTeam": 1921, "HackOrg": 5465, "Area": 3447, "Tool": 4784, "SamFile": 2400, "Purp": 2424, "Org": 2489, "Idus": 2136, "Time": 2615, "Exp": 1959, "OffAct": 2669, "Way": 2018, "Features": 2441}
+CyNER label count (Total - 16218):
+{"Organization": 3943, "Malware": 6268, "Indicator": 942, "System": 2876, "Vulnerability": 2189}
+SecureBERT-NER label count (Total - 32276):
+{"SECTEAM": 2058, "APT": 4628, "LOC": 3400, "IDTY": 5123, "MAL": 4612, "TOOL": 1894, "FILE": 2017, "TIME": 2765, "VULID": 709, "ACT": 3768, "ENCR": 12, "MD5": 8, "VULNAME": 872, "OS": 231, "IP": 5, "DOM": 26, "PROT": 130, "EMAIL": 1, "SHA2": 16, "URL": 1}
+Flair label count (Total - 19697):
+{"PER": 582, "ORG": 8734, "MISC": 7635, "LOC": 2746}
