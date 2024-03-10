@@ -1,5 +1,8 @@
 import re
 import json
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 from ner_eval import Evaluator
 
 _LINE_RE = re.compile(r"^(((\S+)(\s+)?)+) (O|(([IB])-(\S+)))$")
@@ -52,6 +55,34 @@ def write_label_count(f, sents, name):
 def build_iob(sent, default='O'):
     return [f'{postag}-{label}' if label is not None else default for postag, label in sent]
 
+def model_performance(model_name, results):
+    return pd.DataFrame([(model_name, match_type, values['precision'], values['recall']) for match_type, values in results.items()], columns=['model_name', 'match_type', 'precision', 'recall'])
+
+def save_figures(cyner_results, cyner_results_agg, secner_results, secner_results_agg, flair_results, flair_results_agg):
+    all_results = {'cyner': cyner_results, 'secner': secner_results, 'flair': flair_results}
+    total_performance = pd.concat([model_performance(model_name, results) for model_name, results in all_results.items()])
+    all_results_agg = {'cyner': cyner_results_agg, 'secner': secner_results_agg, 'flair': flair_results_agg}
+    per_entity_results = pd.concat([pd.concat([model_performance(f'{model_name}/{entity_type}', results) for entity_type, results in results_agg.items()]) for model_name, results_agg in all_results_agg.items()])
+    per_entity_results['entity_type'] = per_entity_results['model_name'].map(lambda x: x.split('/')[1])
+    per_entity_results['model_name'] = per_entity_results['model_name'].map(lambda x: x.split('/')[0])
+
+    plt.figure(figsize=(10,10))
+    sns.barplot(total_performance, x="model_name", y="precision", hue="match_type")
+    plt.savefig("reports/figures/precision.png", dpi=400, bbox_inches="tight")
+
+    plt.figure(figsize=(10,10))
+    sns.barplot(total_performance, x="model_name", y="recall", hue="match_type")
+    plt.savefig("reports/figures/recall.png", dpi=400, bbox_inches="tight")
+
+    plt.figure(figsize=(10,10))
+    sns.barplot(per_entity_results[per_entity_results['match_type']=='exact'], x="entity_type", y="precision", hue="model_name")
+    plt.savefig("reports/figures/per_entity_precision.png", dpi=400, bbox_inches="tight")
+
+    plt.figure(figsize=(10,10))
+    sns.barplot(per_entity_results[per_entity_results['match_type']=='exact'], x="entity_type", y="recall", hue="model_name")
+    plt.savefig("reports/figures/per_entity_recall.png", dpi=400, bbox_inches="tight")
+
+
 true_sents = list(read_iob_tokens('DNRTI/iob.txt'))
 cyner_sents = list(read_iob_tokens('test/results/iob_cyner.txt'))
 secner_sents = list(read_iob_tokens('test/results/iob_secner.txt'))
@@ -88,27 +119,29 @@ with open('test/results/exp1.txt', 'w') as f:
     exp1_flair_labels = [build_iob(change_labels(sent, flair_to_cyner)) for sent in pred_flair]
 
     exp1_cyner_evaluator = Evaluator(exp1_true_labels, exp1_cyner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization'])
-    results, results_agg = exp1_cyner_evaluator.evaluate()
+    cyner_results, cyner_results_agg = exp1_cyner_evaluator.evaluate()
     f.write("################ CyNER results:\n")
-    f.write(json.dumps(results, indent=2) + "\n")
-    f.write(json.dumps(results_agg, indent=2) + "\n")
+    f.write(json.dumps(cyner_results, indent=2) + "\n")
+    f.write(json.dumps(cyner_results_agg, indent=2) + "\n")
 
     exp1_secner_evaluator = Evaluator(exp1_true_labels, exp1_secner_labels, ['Vulnerability', 'Indicator', 'Malware', 'System', 'Organization', 'Time', 'Area'])
-    results, results_agg = exp1_secner_evaluator.evaluate()
+    secner_results, secner_results_agg = exp1_secner_evaluator.evaluate()
     f.write("################ SecNER results:\n")
-    f.write(json.dumps(results, indent=2) + "\n")
-    f.write(json.dumps(results_agg, indent=2) + "\n")
+    f.write(json.dumps(secner_results, indent=2) + "\n")
+    f.write(json.dumps(secner_results_agg, indent=2) + "\n")
 
     exp1_flair_evaluator = Evaluator(exp1_true_labels, exp1_flair_labels, ['Organization', 'Area'])
-    results, results_agg = exp1_flair_evaluator.evaluate()
+    flair_results, flair_results_agg = exp1_flair_evaluator.evaluate()
     f.write("################ Flair results:\n")
-    f.write(json.dumps(results, indent=2) + "\n")
-    f.write(json.dumps(results_agg, indent=2) + "\n")
+    f.write(json.dumps(flair_results, indent=2) + "\n")
+    f.write(json.dumps(flair_results_agg, indent=2) + "\n")
+
+    save_figures(cyner_results, cyner_results_agg, secner_results, secner_results_agg, flair_results, flair_results_agg)
 
 # Experiment2: Test SecNER against True labels on the more specific labels: APT, SECTEAM, IDTY, FILE
 with open('test/results/exp2.txt', 'w') as f:
     true_to_secner = {'HackOrg': 'APT', 'SecTeam': 'SECTEAM', 'Idus': 'IDTY', 'Org': 'IDTY', 'SamFile': 'FILE'}
-    exp2_true_labels = [build_iob(change_labels(sent, true_to_cyner)) for sent in true]
+    exp2_true_labels = [build_iob(change_labels(sent, true_to_secner)) for sent in true]
     exp2_secner_labels = [build_iob(sent) for sent in pred_secner]
 
     exp2_secner_evaluator = Evaluator(exp2_true_labels, exp2_secner_labels, ['APT', 'SECTEAM', 'IDTY', 'FILE'])
