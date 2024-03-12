@@ -75,11 +75,11 @@ def save_figures(cyner_results, cyner_results_agg, secner_results, secner_result
     plt.savefig("reports/figures/recall.png", dpi=400, bbox_inches="tight")
 
     plt.figure(figsize=(10,10))
-    sns.barplot(per_entity_results[per_entity_results['match_type']=='exact'], x="entity_type", y="precision", hue="model_name")
+    sns.barplot(per_entity_results[per_entity_results['match_type']=='strict'], x="entity_type", y="precision", hue="model_name")
     plt.savefig("reports/figures/per_entity_precision.png", dpi=400, bbox_inches="tight")
 
     plt.figure(figsize=(10,10))
-    sns.barplot(per_entity_results[per_entity_results['match_type']=='exact'], x="entity_type", y="recall", hue="model_name")
+    sns.barplot(per_entity_results[per_entity_results['match_type']=='strict'], x="entity_type", y="recall", hue="model_name")
     plt.savefig("reports/figures/per_entity_recall.png", dpi=400, bbox_inches="tight")
 
 
