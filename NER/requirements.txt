@@ -6,3 +6,4 @@ git+https://github.com/naormatania/tner.git@onnx
 optimum
 nltk
 streamlit
+python-docx
