@@ -1,0 +1,8 @@
+pandas
+seqeval
+torch
+transformers
+whoosh
+sentence-transformers
+tner
+datasets

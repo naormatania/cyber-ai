@@ -15,6 +15,9 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Get Rust
 #RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
 
+RUN mkdir -p external_deps
+COPY external_deps external_deps
+
 # Install Python dependencies from the requirements file
 RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
 

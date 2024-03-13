@@ -4,6 +4,9 @@ WORKDIR /app
 
 COPY requirements.txt ./
 
+RUN mkdir -p external_deps
+COPY external_deps external_deps
+
 RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
 
 RUN mkdir -p models
