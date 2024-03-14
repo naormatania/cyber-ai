@@ -2,7 +2,7 @@ from tner import TransformersNER
 import cyner
 from features.malware_text_db import MalwareTextDataset
 from features.ner_dataset import TokenizedNERDataset
-from models.consts import LABEL2ID
+from models.consts import SECNER_LABEL2ID
 import time
 import numpy as np
 import torch
@@ -14,7 +14,7 @@ ds = MalwareTextDataset(num_sentences=10)
 cyner_tokenized_ds = TokenizedNERDataset(ds, 'AI4Sec/cyner-xlm-roberta-base', 512)
 secner_tokenized_ds = TokenizedNERDataset(ds, 'CyberPeace-Institute/SecureBERT-NER', 512)
 
-SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID)
+SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=SECNER_LABEL2ID)
 CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512})
 
 N_GPU = torch.cuda.device_count()

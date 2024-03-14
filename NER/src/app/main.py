@@ -3,7 +3,7 @@ import cyner
 from tner import TransformersNER
 from nltk.tokenize import WhitespaceTokenizer
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
-from models.consts import LABEL2ID
+from models.consts import SECNER_LABEL2ID
 from transformers import AutoTokenizer
 from optimum.bettertransformer import BetterTransformer
 from flair.models import SequenceTagger
@@ -29,13 +29,13 @@ if optimization == "ONNX":
   # options = onnxruntime.SessionOptions()
   # options.intra_op_num_threads = int(os.environ['INTRAOP_THREADS'])
   # options.inter_op_num_threads = int(os.environ['INTEROP_THREADS'])
-  # SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID, session_options=options)
-  # #SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=LABEL2ID)
+  # SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=SECNER_LABEL2ID, session_options=options)
+  # #SECUREBERT_NER_MODEL = TransformersNER("onnx/SecureBERT_NER/", max_length=512, label2id=SECNER_LABEL2ID)
   # CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512, 'session_options': options})
   # #CYNER_MODEL = cyner.TransformersNER({'model': 'onnx/cyner_xlm_roberta_base/', 'max_seq_length': 512})
   pass
 else:
-  SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512, label2id=LABEL2ID)
+  SECUREBERT_NER_MODEL = TransformersNER("models/SecureBERT-NER/", max_length=512, label2id=SECNER_LABEL2ID)
   CYNER_MODEL = cyner.TransformersNER({'model': 'models/cyner/', 'max_seq_length': 512})
   if optimization == "BETTER_TRANSFORMER":
     # Unfortunately torch.compile/onnx doesn't work with BetterTransformer
