@@ -7,7 +7,6 @@ from tqdm import tqdm
 
 parser = ArgumentParser()
 parser.add_argument('model', choices=['blip', 'blip-lavis', 'git'])
-parser.add_argument('metric', choices=['sacrebleu', 'rouge'])
 parser.add_argument('--batch_size', type=int, default=12)
 parser.add_argument('--min_new_tokens', type=int, nargs='?')
 
@@ -34,9 +33,10 @@ for i in tqdm(range(0, TOTAL_SIZE, args.batch_size)):
     total_predictions.extend(caption_batch(batch['image_path']))
     total_references.extend([[caption] for caption in batch['caption']])
 
-metric = evaluate.load(args.metric)
-results = metric.compute(predictions=total_predictions, references=total_references)
-if args.metric == 'sacrebleu':
-  print(f"BLEU score: {results['score']}")
-elif args.metric == 'rouge':
-  print(f"ROUGE score: {results}")
+for metric_name in ['sacrebleu', 'rouge']:
+  metric = evaluate.load(metric_name)
+  results = metric.compute(predictions=total_predictions, references=total_references)
+  if metric_name == 'sacrebleu':
+    print(f"BLEU score: {results['score']}")
+  elif metric_name == 'rouge':
+    print(f"ROUGE score: {results}")

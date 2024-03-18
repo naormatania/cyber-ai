@@ -7,7 +7,7 @@ import shutil
 from huggingface_hub import login
 from argparse import ArgumentParser
 
-MODELS = ['git-large', 'blip-large', 'blip-large-20', 'lblip-base', 'lblip-base-20', 'lblip-large-20']
+MODELS = ['git-large', 'blip-large', 'blip-large-20', 'lblip-base', 'lblip-base-20', 'lblip-large', 'lblip-large-20']
 REPORT_NAME_TO_DIR_PATH = {
   'desktop-ui': 'desktop-ui-dataset/images',
   'webscreen-test': 'website-screenshots/test',
