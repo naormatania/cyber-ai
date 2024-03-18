@@ -27,11 +27,12 @@ for m in ds['validation']:
 total_predictions = []
 total_references = []
 
-image_path_to_captions = image_path_to_captions.items()
+image_path_to_captions = list(image_path_to_captions.items())
+image_path_to_captions = [(item[0],item[1][:5]) for item in image_path_to_captions]
 for i in tqdm(range(0, len(image_path_to_captions), BATCH_SIZE)):
     batch = image_path_to_captions[i:i+BATCH_SIZE]
     images = [Image.open(item[0]) for item in batch]
-    inputs = BLIP_PROCESSOR(images=batch, return_tensors="pt").to(DEVICE)
+    inputs = BLIP_PROCESSOR(images=images, return_tensors="pt").to(DEVICE)
     out = BLIP_MODEL.generate(**inputs, max_new_tokens=500)
     total_predictions.extend(BLIP_PROCESSOR.batch_decode(out, skip_special_tokens=True))
     total_references.extend([item[1] for item in batch])
