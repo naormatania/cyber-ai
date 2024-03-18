@@ -12,7 +12,7 @@ from transformers import AutoProcessor
 FIELDS = ['file_name', 'text']
 
 parser = ArgumentParser()
-parser.add_argument('model', choices=['blip', 'blip2', 'blip2-lavis', 'git'])
+parser.add_argument('model', choices=['blip', 'blip2', 'blip-lavis', 'git'])
 parser.add_argument('dataset', choices=['desktop-ui-dataset/images', 'website-screenshots/train', 'website-screenshots/validation', 'website-screenshots/test'])
 parser.add_argument('--report_name', type=str, default="")
 parser.add_argument('--batch_size', type=int, default=12)
@@ -38,7 +38,7 @@ def caption_batch(batch):
   before = time.time()
   files = [('files', (os.path.basename(path), open(path, 'rb'), 'image/jpeg')) for path in batch]
   if args.min_new_tokens:
-    param_name = 'min_length' if args.model == 'blip2-lavis' else 'min_new_tokens'
+    param_name = 'min_length' if args.model == 'blip-lavis' else 'min_new_tokens'
     r = requests.post(f'http://127.0.0.1:8000/caption/{args.model}?{param_name}={args.min_new_tokens}', files=files)
   else:
     r = requests.post(f'http://127.0.0.1:8000/caption/{args.model}', files=files)    
