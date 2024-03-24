@@ -1,5 +1,5 @@
 from datasets import load_dataset, Dataset
-from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration
+from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor, AutoModelForCausalLM
 from lavis.models import load_model_and_preprocess
 import torch
 import evaluate
@@ -15,6 +15,20 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 BATCH_SIZE = 12
 
 _ = torch.set_grad_enabled(False)
+
+def hf_git_base():
+    model_id = "microsoft/git-base"
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = AutoProcessor.from_pretrained(model_id)
+    return model, processor
+
+def hf_git_large():
+    model_id = "microsoft/git-large"
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = AutoProcessor.from_pretrained(model_id)
+    return model, processor
 
 def hf_blip_base():
     model_id = "Salesforce/blip-image-captioning-base"
@@ -52,12 +66,12 @@ def lavis_blip2_opt_2_7b():
     return model, processor["eval"]
 
 MODEL_INITIALIZERS = {
-   'hf-blip-base': hf_blip_base,
-   'hf-blip-large': hf_blip_large,
-#    'hf-blip2-opt-2.7b': hf_blip2_opt_2_7b,
-   'lavis-blip-base': lavis_blip_base,
-   'lavis-blip-large': lavis_blip_large,
-#    'lavis-blip2-opt-2.7b': lavis_blip2_opt_2_7b,
+    'hf-git-base': hf_git_base,
+    'hf-git-large': hf_git_large,
+    'hf-blip-base': hf_blip_base,
+    'hf-blip-large': hf_blip_large,
+    'lavis-blip-base': lavis_blip_base,
+    'lavis-blip-large': lavis_blip_large,
 }
 
 def caption_images(model, processor, image_paths, min_new_tokens=None):
@@ -106,7 +120,7 @@ login(args.hf_key)
 ds = load_dataset("ydshieh/coco_dataset_script", "2017", data_dir="/content/coco")
 
 image_path_to_captions = {}
-for m in ds['test']:
+for m in ds['validation']:
   image_path = m['image_path']
   caption = m['caption']
   if image_path in image_path_to_captions:
@@ -121,6 +135,7 @@ total_predictions = {'file_name': list(map(os.path.basename, image_paths))}
 eval_results = []
 
 for model_name, initializer in MODEL_INITIALIZERS.items():
+    print(f'Running model: {model_name}')
     model, processor = initializer()
 
     predictions = caption_images(model, processor, image_paths)
@@ -129,17 +144,17 @@ for model_name, initializer in MODEL_INITIALIZERS.items():
     for metric_name, score in metrics.items():
         eval_results.append((model_name, metric_name, score))
 
-    predictions = caption_images(model, processor, image_paths, 20)
-    total_predictions[f'{model_name}/20'] = predictions
-    metrics = evaluate_metrics(predictions, references)
-    for metric_name, score in metrics.items():
-        eval_results.append((f'{model_name}/20', metric_name, score))
+    # predictions = caption_images(model, processor, image_paths, 20)
+    # total_predictions[f'{model_name}/20'] = predictions
+    # metrics = evaluate_metrics(predictions, references)
+    # for metric_name, score in metrics.items():
+    #     eval_results.append((f'{model_name}/20', metric_name, score))
 
 eval_df = pd.DataFrame(eval_results, columns=['model_name', 'metric_name', 'value'])
 ds = Dataset.from_pandas(eval_df)
 ds.push_to_hub(f'naorm/caption-eval')
 
 prediction_df = pd.DataFrame(total_predictions)
-total_predictions.to_csv('content/coco/test/metadata.csv')
-dataset = load_dataset('imagefolder', data_dir='content/coco/test')
+prediction_df.to_csv('content/coco/val2017/metadata.csv')
+dataset = load_dataset('imagefolder', data_dir='content/coco/val2017')
 dataset.push_to_hub(f'naorm/all-captions')
