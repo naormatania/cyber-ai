@@ -30,6 +30,20 @@ def hf_git_large():
     processor = AutoProcessor.from_pretrained(model_id)
     return model, processor
 
+def hf_git_base_coco():
+    model_id = "microsoft/git-base-coco"
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = AutoProcessor.from_pretrained(model_id)
+    return model, processor
+
+def hf_git_large_coco():
+    model_id = "microsoft/git-large-coco"
+    model = AutoModelForCausalLM.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = AutoProcessor.from_pretrained(model_id)
+    return model, processor
+
 def hf_blip_base():
     model_id = "Salesforce/blip-image-captioning-base"
     model = BlipForConditionalGeneration.from_pretrained(model_id)
@@ -68,6 +82,8 @@ def lavis_blip2_opt_2_7b():
 MODEL_INITIALIZERS = {
     'hf-git-base': hf_git_base,
     'hf-git-large': hf_git_large,
+    'hf-git-base-coco': hf_git_base_coco,
+    'hf-git-large-coco': hf_git_large_coco,
     'hf-blip-base': hf_blip_base,
     'hf-blip-large': hf_blip_large,
     'lavis-blip-base': lavis_blip_base,
@@ -155,6 +171,6 @@ ds = Dataset.from_pandas(eval_df)
 ds.push_to_hub(f'naorm/caption-eval')
 
 prediction_df = pd.DataFrame(total_predictions)
-prediction_df.to_csv('content/coco/val2017/metadata.csv')
-dataset = load_dataset('imagefolder', data_dir='content/coco/val2017')
+prediction_df.to_csv('/content/coco/val2017/metadata.csv', index=False)
+dataset = load_dataset('imagefolder', data_dir='/content/coco/val2017')
 dataset.push_to_hub(f'naorm/all-captions')
