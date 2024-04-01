@@ -1,3 +1,4 @@
+# Copied from https://github.com/tylin/coco-caption/blob/master/pycocoevalcap/cider/cider_scorer.py
 #!/usr/bin/env python
 # Tsung-Yi Lin <tl483@cornell.edu>
 # Ramakrishna Vedantam <vrama91@vt.edu>
