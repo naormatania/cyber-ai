@@ -1,9 +1,10 @@
 from datasets import load_dataset, Dataset
-from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor, AutoModelForCausalLM, Pix2StructForConditionalGeneration, Pix2StructProcessor
+from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor, AutoModelForCausalLM, Pix2StructForConditionalGeneration, Pix2StructProcessor, file_utils
 from lavis.models import load_model_and_preprocess
 import torch
 import evaluate
 import os
+import shutil
 from tqdm import tqdm
 from PIL import Image
 import pandas as pd
@@ -248,6 +249,8 @@ def evaluate_models(model_initializers, references, image_paths):
         gc.collect()
         torch.cuda.empty_cache()
 
+        shutil.rmtree(os.path.join(file_utils.default_cache_path, "models--" + model.config.name_or_path.replace("/", "--")))
+
         # predictions = caption_images(model, processor, image_paths, 20)
         # total_predictions[f'{model_name}/20'] = predictions
         # metrics = evaluate_metrics(predictions, references)
@@ -294,10 +297,10 @@ if args.dataset == 'coco':
 else:
     references, image_paths = load_screen2words()
 
-    print("Evaluate base models:")
-    predictions, eval_results = evaluate_models(BASE_MODEL_INITIALIZERS, references, image_paths)
-    save_eval_results(eval_results, '-screen2words')
-    save_predictions(predictions, '/content/images', '-screen2words')
+    # print("Evaluate base models:")
+    # predictions, eval_results = evaluate_models(BASE_MODEL_INITIALIZERS, references, image_paths)
+    # save_eval_results(eval_results, '-screen2words')
+    # save_predictions(predictions, '/content/images', '-screen2words')
 
     print("Evaluate blip2 models:")
     predictions, eval_results = evaluate_models(BLIP2_MODEL_INITIALIZERS, references, image_paths)

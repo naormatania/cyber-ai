@@ -10,3 +10,9 @@ With docker container up:
 ```
 python3 test/main.py blip --batch_size=12
 ```
+
+## Run Streamlit
+```
+DOCKER_BUILDKIT=1 docker build --target base -f docker/Dockerfile.streamlit .
+DOCKER_BUILDKIT=1 docker build -t localbuild:streamlit --target build -f docker/Dockerfile.streamlit . && docker run -p 8501:8501 -it localbuild:streamlit
+```
