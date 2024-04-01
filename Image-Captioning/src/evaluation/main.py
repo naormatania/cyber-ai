@@ -1,5 +1,5 @@
 from datasets import load_dataset, Dataset
-from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor, AutoModelForCausalLM
+from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, AutoProcessor, AutoModelForCausalLM, Pix2StructForConditionalGeneration, Pix2StructProcessor
 from lavis.models import load_model_and_preprocess
 import torch
 import evaluate
@@ -110,6 +110,20 @@ def hf_blip2_opt_2_7b_coco_8bit():
     processor = Blip2Processor.from_pretrained(model_id)
     return model, processor
 
+def hf_pix2struct_screen2words_base():
+    model_id = "google/pix2struct-screen2words-base"
+    model = Pix2StructForConditionalGeneration.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = Pix2StructProcessor.from_pretrained(model_id)
+    return model, processor
+
+def hf_pix2struct_screen2words_large():
+    model_id = "google/pix2struct-screen2words-large"
+    model = Pix2StructForConditionalGeneration.from_pretrained(model_id)
+    model = model.to(DEVICE)
+    processor = Pix2StructProcessor.from_pretrained(model_id)
+    return model, processor
+
 BASE_MODEL_INITIALIZERS = {
     'hf-git-base': hf_git_base,
     'hf-git-large': hf_git_large,
@@ -131,6 +145,11 @@ QUANT_BLIP2_MODEL_INITIALIZERS = {
     'hf-blip2-8bit': hf_blip2_opt_2_7b_8bit,
     'hf-blip2-coco-16bit': hf_blip2_opt_2_7b_coco_16bit,
     'hf-blip2-coco-8bit': hf_blip2_opt_2_7b_coco_8bit,
+}
+
+PIX2STRUCT_MODEL_INITIALIZERS = {
+    'hf-pix2struct-base': hf_pix2struct_screen2words_base,
+    'hf-pix2struct-large': hf_pix2struct_screen2words_large,
 }
 
 def caption_images(model_name, model, processor, image_paths, min_new_tokens=None):
@@ -289,3 +308,8 @@ else:
     predictions, eval_results = evaluate_models(QUANT_BLIP2_MODEL_INITIALIZERS, references, image_paths)
     save_eval_results(eval_results, '-screen2words-blip2-quant')
     save_predictions(predictions, '/content/images', '-screen2words-blip2-quant')
+
+    print("Evaluate pix2struct models:")
+    predictions, eval_results = evaluate_models(PIX2STRUCT_MODEL_INITIALIZERS, references, image_paths)
+    save_eval_results(eval_results, '-screen2words-pix2struct')
+    save_predictions(predictions, '/content/images', '-screen2words-pix2struct')
