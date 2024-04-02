@@ -9,13 +9,13 @@ RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
 RUN mkdir -p models
 COPY models models
 
-COPY build/blip_caption_base_coco.yaml .
+COPY src/app/cache_model.py .
+RUN python cache_model.py
 
 FROM base as build
 
 COPY src .
-COPY src/app/cache_model.py .
-RUN python cache_model.py
+
 COPY src/app/streamlit.py .
 
 EXPOSE 8501

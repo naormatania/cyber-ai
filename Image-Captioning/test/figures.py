@@ -33,14 +33,17 @@ def save_coco_figures():
 def save_screen2words_figures():
     os.makedirs("reports/figures/screen2words")
     ds = load_dataset("naorm/caption-eval-screen2words")
-    df = ds['train'].to_pandas().reset_index(drop=True)
+    ds2 = load_dataset("naorm/caption-eval-screen2words-16bit-blip2")
+    ds3 = load_dataset("naorm/caption-eval-screen2words-pix2struct")
+
+    df = pd.concat([ds['train'].to_pandas(), ds2['train'].to_pandas(), ds3['train'].to_pandas()]).reset_index(drop=True)
 
     plt.figure(figsize=(30,20))
-    sns.barplot(data=df[(df['metric_name']!='sacrebleu')&(~df['model_name'].str.contains('bit'))], x='model_name', y='value', hue='metric_name')
+    sns.barplot(data=df[df['metric_name']!='sacrebleu'], x='model_name', y='value', hue='metric_name')
     plt.savefig("reports/figures/screen2words/eval.png", dpi=400, bbox_inches="tight")
 
     plt.figure(figsize=(20,10))
-    sns.barplot(data=df[(df['metric_name']=='sacrebleu')&(~df['model_name'].str.contains('bit'))], x='model_name', y='value', hue='metric_name')
+    sns.barplot(data=df[df['metric_name']=='sacrebleu'], x='model_name', y='value', hue='metric_name')
     plt.savefig("reports/figures/screen2words/sacrebleu.png", dpi=400, bbox_inches="tight")
 
 parser = ArgumentParser()

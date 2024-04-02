@@ -303,15 +303,15 @@ if args.dataset == 'coco':
 else:
     references, image_paths = load_screen2words()
 
-    # print("Evaluate base models:")
-    # predictions, eval_results = evaluate_models(BASE_MODEL_INITIALIZERS, references, image_paths)
-    # save_eval_results(eval_results, '-screen2words')
-    # save_predictions(predictions, '/content/images', '-screen2words')
+    print("Evaluate base models:")
+    predictions, eval_results = evaluate_models(BASE_MODEL_INITIALIZERS, references, image_paths)
+    save_eval_results(eval_results, '-screen2words')
+    save_predictions(predictions, '/content/images', '-screen2words')
 
-    # print("Evaluate blip2 16bit models:")
-    # predictions, eval_results = evaluate_models(BLIP2_16BIT_MODEL_INITIALIZERS, references, image_paths)
-    # save_eval_results(eval_results, '-screen2words-16bit-blip2')
-    # save_predictions(predictions, '/content/images', '-screen2words-16bit-blip2')
+    print("Evaluate blip2 16bit models:")
+    predictions, eval_results = evaluate_models(BLIP2_16BIT_MODEL_INITIALIZERS, references, image_paths)
+    save_eval_results(eval_results, '-screen2words-16bit-blip2')
+    save_predictions(predictions, '/content/images', '-screen2words-16bit-blip2')
 
     print("Evaluate pix2struct models:")
     predictions, eval_results = evaluate_models(PIX2STRUCT_MODEL_INITIALIZERS, references, image_paths)

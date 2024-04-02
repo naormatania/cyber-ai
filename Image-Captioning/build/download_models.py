@@ -1,4 +1,4 @@
-from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration
+from transformers import BlipProcessor, BlipForConditionalGeneration, Blip2Processor, Blip2ForConditionalGeneration, Pix2StructForConditionalGeneration, Pix2StructProcessor
 from transformers import AutoModelForCausalLM, AutoProcessor
 from argparse import ArgumentParser
 import os
@@ -36,8 +36,19 @@ def download_blip2_model(model_path, model_name):
     processor.save_pretrained(model_path)
     model.save_pretrained(model_path)
 
+def download_pix2struct_model(model_path, model_name):
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+
+    processor = Pix2StructProcessor.from_pretrained(model_name, is_vqa=False)
+    model = Pix2StructForConditionalGeneration.from_pretrained(model_name)
+
+    # Save the processor and model to the specified directory
+    processor.save_pretrained(model_path)
+    model.save_pretrained(model_path)
+
 parser = ArgumentParser()
-parser.add_argument('model', choices=['blip', 'git', 'blip2', 'lavis-blip'])
+parser.add_argument('model', choices=['blip', 'git', 'blip2', 'lavis-blip', 'pix2struct'])
 args = parser.parse_args()
 
 if args.model == 'blip':
@@ -52,3 +63,6 @@ elif args.model == 'blip2':
 elif args.model == 'lavis-blip':
     os.system('cd models; wget https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/BLIP/blip_coco_caption_base.pth')
     os.system('cd models; wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth')
+elif args.model == 'pix2struct':
+    download_pix2struct_model('models/pix2struct-base/', 'google/pix2struct-screen2words-base')
+    download_pix2struct_model('models/pix2struct-large/', 'google/pix2struct-screen2words-large')
