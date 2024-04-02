@@ -12,7 +12,7 @@ from transformers import AutoProcessor
 FIELDS = ['file_name', 'text']
 
 parser = ArgumentParser()
-parser.add_argument('model', choices=['blip', 'blip2', 'blip-lavis', 'git'])
+parser.add_argument('model', choices=['blip', 'blip2', 'blip-lavis', 'git', 'pix2struct'])
 parser.add_argument('dataset', choices=['desktop-ui-dataset/images', 'website-screenshots/train', 'website-screenshots/validation', 'website-screenshots/test'])
 parser.add_argument('--report_name', type=str, default="")
 parser.add_argument('--batch_size', type=int, default=12)
@@ -32,6 +32,8 @@ if args.model == 'blip2':
   model_path = "models/blip2/"
 elif args.model == 'git':
   model_path = "models/git-large/"
+elif args.model == 'pix2struct':
+  model_path = "models/pix2struct-large/"
 processor = AutoProcessor.from_pretrained(model_path)
 
 def caption_batch(batch):
