@@ -55,9 +55,11 @@ if args.model == 'blip':
     download_blip_model('models/blip-base/', 'Salesforce/blip-image-captioning-base')
     download_blip_model('models/blip-large/', 'Salesforce/blip-image-captioning-large')
 elif args.model == 'git':
-    download_git_model('models/git-base/', 'microsoft/git-base')
-    download_git_model('models/git-large/', 'microsoft/git-large')
-    download_git_model('models/git-large-textcaps/', 'microsoft/git-large-textcaps')
+    # download_git_model('models/git-base/', 'microsoft/git-base')
+    # download_git_model('models/git-large/', 'microsoft/git-large')
+    # download_git_model('models/git-large-textcaps/', 'microsoft/git-large-textcaps')
+    download_git_model('models/git-base-coco/', 'microsoft/git-base-coco')
+    download_git_model('models/git-large-coco/', 'microsoft/git-large-coco')
 elif args.model == 'blip2':
     download_blip2_model('models/blip2/', 'Salesforce/blip2-opt-2.7b')
 elif args.model == 'lavis-blip':

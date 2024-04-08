@@ -12,7 +12,7 @@ from transformers import AutoProcessor
 FIELDS = ['file_name', 'text']
 
 parser = ArgumentParser()
-parser.add_argument('model', choices=['blip', 'blip2', 'blip-lavis', 'git', 'pix2struct'])
+parser.add_argument('model', choices=['blip', 'blip2', 'blip-lavis', 'git', 'pix2struct-base', 'pix2struct-large'])
 parser.add_argument('dataset', choices=['desktop-ui-dataset/images', 'website-screenshots/train', 'website-screenshots/validation', 'website-screenshots/test'])
 parser.add_argument('--report_name', type=str, default="")
 parser.add_argument('--batch_size', type=int, default=12)
@@ -32,7 +32,9 @@ if args.model == 'blip2':
   model_path = "models/blip2/"
 elif args.model == 'git':
   model_path = "models/git-large/"
-elif args.model == 'pix2struct':
+elif args.model == 'pix2struct-base':
+  model_path = "models/pix2struct-base/"
+elif args.model == 'pix2struct-large':
   model_path = "models/pix2struct-large/"
 processor = AutoProcessor.from_pretrained(model_path)
 
@@ -66,4 +68,5 @@ else:
     batch = image_paths[i:i+args.batch_size]
     caption = caption_batch(batch)
 
+# TODO: add way to remove major outliers in time
 print(f"avg_caption_size={np.mean(caption_size_arr)}, avg_time={np.mean(time_arr)}, std_time={np.std(time_arr)}, median_time={np.median(time_arr)}, 95pct_time={np.percentile(time_arr, 95)}")

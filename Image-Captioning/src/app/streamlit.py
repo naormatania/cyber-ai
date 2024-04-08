@@ -76,7 +76,7 @@ images = []
 uploaded_files = left_column.file_uploader("", type=["png", "jpg", "jpeg"], accept_multiple_files=True)
 for uploaded_file in uploaded_files:
     file_names.append(uploaded_file.name)
-    images.append(Image.open(uploaded_file))
+    images.append(Image.open(uploaded_file).convert('RGB'))
 if left_column.button('Process', disabled=len(images)==0):
     if model == "Natural Images":
         captions = ni_captions(images)

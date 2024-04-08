@@ -1,4 +1,4 @@
-from transformers import BlipProcessor, BlipForConditionalGeneration, AutoModelForCausalLM, AutoProcessor
+from transformers import BlipProcessor, BlipForConditionalGeneration, AutoModelForCausalLM, Pix2StructForConditionalGeneration, AutoProcessor
 from lavis.models import load_model_and_preprocess
 from fastapi import FastAPI, UploadFile
 # from transformers import Blip2Processor, Blip2ForConditionalGeneration
@@ -21,42 +21,50 @@ print("default num threads for interop parallelism: ", torch.get_num_interop_thr
 torch.set_num_interop_threads(int(os.environ['INTEROP_THREADS'])) # interop parallelism on CPU
 print("current num threads for interop parallelism: ", torch.get_num_interop_threads())
 
-BLIP_MODELS = {
-    "base": "models/blip-base/",
-    "large": "models/blip-large/",
-}
-BLIP_MODEL_ID = BLIP_MODELS["large"]
-BLIP_MODEL = BlipForConditionalGeneration.from_pretrained(BLIP_MODEL_ID)
-BLIP_MODEL = BLIP_MODEL.to(DEVICE)
-BLIP_PROCESSOR = BlipProcessor.from_pretrained(BLIP_MODEL_ID)
+# BLIP_MODELS = {
+#     "base": "models/blip-base/",
+#     "large": "models/blip-large/",
+# }
+# BLIP_MODEL_ID = BLIP_MODELS["large"]
+# BLIP_MODEL = BlipForConditionalGeneration.from_pretrained(BLIP_MODEL_ID)
+# BLIP_PROCESSOR = BlipProcessor.from_pretrained(BLIP_MODEL_ID)
 
 GIT_MODELS = {
     "base": "models/git-base/",
     "large": "models/git-large/",
     "large-textcaps": "models/git-large-textcaps/",
 }
-GIT_MODEL_ID = GIT_MODELS["large"]
-GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
-GIT_MODEL = GIT_MODEL.to(DEVICE)
-GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
+# GIT_MODEL_ID = GIT_MODELS["base"]
+# GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
+# GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
+
+PIX2STRUCT_MODELS = {
+    "base": "models/pix2struct-base/",
+    "large": "models/pix2struct-large/",
+}
+PIX2STRUCT_BASE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["base"])
+PIX2STRUCT_BASE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["base"])
+# PIX2STRUCT_LARGE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["large"])
+# PIX2STRUCT_LARGE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["large"])
 
 # TODO: The docker fails to load the model due to OOM. Fix it
 # BLIP2_MODEL_ID = "models/blip2/"
 # BLIP2_MODEL = Blip2ForConditionalGeneration.from_pretrained(BLIP2_MODEL_ID)
-# BLIP2_MODEL = BLIP2_MODEL.to(DEVICE)
 # BLIP2_PROCESSOR = Blip2Processor.from_pretrained(BLIP2_MODEL_ID)
 
 # LBLIP_MODEL_BASE, LBLIP_PROCESSORS_BASE, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True, device=DEVICE)
-LBLIP_MODEL_LARGE, LBLIP_PROCESSORS_LARGE, _ = load_model_and_preprocess(name="blip_caption", model_type="large_coco", is_eval=True, device=DEVICE)
-LBLIP_PROCESSOR = LBLIP_PROCESSORS_LARGE["eval"]
-LBLIP_MODEL = LBLIP_MODEL_LARGE
+# LBLIP_MODEL_LARGE, LBLIP_PROCESSORS_LARGE, _ = load_model_and_preprocess(name="blip_caption", model_type="large_coco", is_eval=True, device=DEVICE)
+# LBLIP_PROCESSOR = LBLIP_PROCESSORS_LARGE["eval"]
+# LBLIP_MODEL = LBLIP_MODEL_LARGE
 
 # ONNX is not supported
 optimization = os.environ['OPTIMIZATION']
-if optimization == "TORCH_COMPILE": 
+if optimization == "TORCH_COMPILE":
     print("torch compile")
-    BLIP_MODEL = torch.compile(BLIP_MODEL)
-    GIT_MODEL = torch.compile(GIT_MODEL)
+    # BLIP_MODEL = torch.compile(BLIP_MODEL)
+    # GIT_MODEL = torch.compile(GIT_MODEL)
+    PIX2STRUCT_BASE_MODEL = torch.compile(PIX2STRUCT_BASE_MODEL)
+    # PIX2STRUCT_LARGE_MODEL = torch.compile(PIX2STRUCT_LARGE_MODEL)
     # This does not improve LBLIP2
     # LBLIP2_MODEL = torch.compile(LBLIP2_MODEL)
     #BLIP2_MODEL = torch.compile(BLIP2_MODEL)
@@ -111,6 +119,20 @@ async def caption_images_blip_lavis(files: list[UploadFile], min_length: int | N
             out = LBLIP_MODEL.generate({"image": inputs}, num_beams=1, max_length=500)
         captions.extend(out)
     
+    return {'captions': [captions]}
+
+@app.post("/caption/pix2struct-base")
+async def caption_images_pix2struct_base(files: list[UploadFile], min_new_tokens: int | None = None):
+    contents = await asyncio.gather(*[file.read() for file in files])
+    images = [Image.open(io.BytesIO(content)) for content in contents]
+    captions = caption(PIX2STRUCT_BASE_MODEL, PIX2STRUCT_BASE_PROCESSOR, images, min_new_tokens)
+    return {'captions': [captions]}
+
+@app.post("/caption/pix2struct-large")
+async def caption_images_pix2struct_large(files: list[UploadFile], min_new_tokens: int | None = None):
+    contents = await asyncio.gather(*[file.read() for file in files])
+    images = [Image.open(io.BytesIO(content)) for content in contents]
+    captions = caption(PIX2STRUCT_LARGE_MODEL, PIX2STRUCT_LARGE_PROCESSOR, images, min_new_tokens)
     return {'captions': [captions]}
 
 if __name__ == '__main__':
