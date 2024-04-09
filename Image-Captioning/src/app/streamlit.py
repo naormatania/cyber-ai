@@ -67,7 +67,7 @@ left_column, right_column = st.columns(2)
 
 model = left_column.radio(
     "Model",
-    ["Natural Images", "Screenshots"],
+    ["Natural Images", "Screenshots (Mobile/Desktop)"],
 )
 
 file_names = []
@@ -78,10 +78,14 @@ for uploaded_file in uploaded_files:
     file_names.append(uploaded_file.name)
     images.append(Image.open(uploaded_file).convert('RGB'))
 if left_column.button('Process', disabled=len(images)==0):
-    if model == "Natural Images":
-        captions = ni_captions(images)
-    else:
-        captions = sc_captions(images)
+    caption_func = ni_captions if model == "Natural Images" else sc_captions
+    progress_text = lambda file_name: f'Operation in progress for {file_name}. Please wait.'
+    progress_bar = right_column.progress(0, text=progress_text(file_names[0]))
+    captions = []
+    for i, (file_name, image) in enumerate(zip(file_names, images)):
+        progress_bar.progress(i * 1.0 / len(file_names), text=progress_text(file_name))
+        captions.append(caption_func([image])[0])
+    progress_bar.empty()
     df = pd.DataFrame({"file_name": file_names, "caption": captions}).set_index('file_name')
     right_column.dataframe(df, width=1200)
     csv = convert_df(df)

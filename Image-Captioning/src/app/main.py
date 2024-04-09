@@ -33,17 +33,22 @@ GIT_MODELS = {
     "base": "models/git-base/",
     "large": "models/git-large/",
     "large-textcaps": "models/git-large-textcaps/",
+    "base-coco": "models/git-base-coco/",
+    "large-coco": "models/git-large-coco/",
 }
 # GIT_MODEL_ID = GIT_MODELS["base"]
 # GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
 # GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
+GIT_MODEL_ID = GIT_MODELS["large-coco"]
+GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
+GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
 
 PIX2STRUCT_MODELS = {
     "base": "models/pix2struct-base/",
     "large": "models/pix2struct-large/",
 }
-PIX2STRUCT_BASE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["base"])
-PIX2STRUCT_BASE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["base"])
+# PIX2STRUCT_BASE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["base"])
+# PIX2STRUCT_BASE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["base"])
 # PIX2STRUCT_LARGE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["large"])
 # PIX2STRUCT_LARGE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["large"])
 
@@ -62,8 +67,8 @@ optimization = os.environ['OPTIMIZATION']
 if optimization == "TORCH_COMPILE":
     print("torch compile")
     # BLIP_MODEL = torch.compile(BLIP_MODEL)
-    # GIT_MODEL = torch.compile(GIT_MODEL)
-    PIX2STRUCT_BASE_MODEL = torch.compile(PIX2STRUCT_BASE_MODEL)
+    GIT_MODEL = torch.compile(GIT_MODEL)
+    # PIX2STRUCT_BASE_MODEL = torch.compile(PIX2STRUCT_BASE_MODEL)
     # PIX2STRUCT_LARGE_MODEL = torch.compile(PIX2STRUCT_LARGE_MODEL)
     # This does not improve LBLIP2
     # LBLIP2_MODEL = torch.compile(LBLIP2_MODEL)

@@ -31,7 +31,8 @@ model_path = "models/blip-large/"
 if args.model == 'blip2':
   model_path = "models/blip2/"
 elif args.model == 'git':
-  model_path = "models/git-large/"
+  #model_path = "models/git-large/"
+  model_path = "models/git-large-coco/"
 elif args.model == 'pix2struct-base':
   model_path = "models/pix2struct-base/"
 elif args.model == 'pix2struct-large':
