@@ -12,7 +12,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 st.set_page_config(layout="wide")
 
-@st.cache
+@st.cache_resource
 def init_pytorch():
     _ = torch.set_grad_enabled(False)
     torch.set_num_threads(int(os.environ['INTRAOP_THREADS']))
@@ -78,14 +78,17 @@ for uploaded_file in uploaded_files:
     file_names.append(uploaded_file.name)
     images.append(Image.open(uploaded_file).convert('RGB'))
 if left_column.button('Process', disabled=len(images)==0):
-    caption_func = ni_captions if model == "Natural Images" else sc_captions
     progress_text = lambda file_name: f'Operation in progress for {file_name}. Please wait.'
     progress_bar = right_column.progress(0, text=progress_text(file_names[0]))
     captions = []
     for i, (file_name, image) in enumerate(zip(file_names, images)):
         progress_bar.progress(i * 1.0 / len(file_names), text=progress_text(file_name))
-        captions.append(caption_func([image])[0])
+        if model == "Natural Images":
+            captions.append(ni_captions([image])[0])
+        else:
+            captions.append(sc_captions([image])[0] + "; " + ni_captions([image])[0])
     progress_bar.empty()
+    right_column.image(uploaded_files[0], caption=f'{file_names[0]}: {captions[0]}')
     df = pd.DataFrame({"file_name": file_names, "caption": captions}).set_index('file_name')
     right_column.dataframe(df, width=1200)
     csv = convert_df(df)
