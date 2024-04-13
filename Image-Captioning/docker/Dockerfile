@@ -20,6 +20,10 @@ RUN mkdir -p models
 COPY models models
 
 # Get the exported ONNX models into the container
+RUN mkdir -p onnx
+COPY build/onnx onnx
+
+# Get the exported ONNX models into the container
 # RUN mkdir -p onnx
 # COPY build/onnx onnx
 

@@ -67,4 +67,4 @@ elif args.model == 'lavis-blip':
     os.system('cd models; wget https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth')
 elif args.model == 'pix2struct':
     download_pix2struct_model('models/pix2struct-base/', 'google/pix2struct-screen2words-base')
-    download_pix2struct_model('models/pix2struct-large/', 'google/pix2struct-screen2words-large')
+    # download_pix2struct_model('models/pix2struct-large/', 'google/pix2struct-screen2words-large')

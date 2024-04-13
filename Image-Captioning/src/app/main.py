@@ -1,5 +1,6 @@
 from transformers import BlipProcessor, BlipForConditionalGeneration, AutoModelForCausalLM, Pix2StructForConditionalGeneration, AutoProcessor
 from lavis.models import load_model_and_preprocess
+from optimum.onnxruntime import ORTModelForPix2Struct, ORTModelForVision2Seq
 from fastapi import FastAPI, UploadFile
 # from transformers import Blip2Processor, Blip2ForConditionalGeneration
 # from optimum.bettertransformer import BetterTransformer
@@ -39,16 +40,19 @@ GIT_MODELS = {
 # GIT_MODEL_ID = GIT_MODELS["base"]
 # GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
 # GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
-GIT_MODEL_ID = GIT_MODELS["large-coco"]
-GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
-GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
+# GIT_MODEL_ID = GIT_MODELS["large-coco"]
+# GIT_MODEL = AutoModelForCausalLM.from_pretrained(GIT_MODEL_ID)
+# GIT_PROCESSOR = AutoProcessor.from_pretrained(GIT_MODEL_ID)
 
 PIX2STRUCT_MODELS = {
     "base": "models/pix2struct-base/",
     "large": "models/pix2struct-large/",
+    "base-onnx": "onnx/pix2struct_base/"
 }
 # PIX2STRUCT_BASE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["base"])
-# PIX2STRUCT_BASE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["base"])
+PIX2STRUCT_BASE_MODEL = ORTModelForPix2Struct.from_pretrained(PIX2STRUCT_MODELS["base-onnx"])
+PIX2STRUCT_BASE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["base"])
+
 # PIX2STRUCT_LARGE_MODEL = Pix2StructForConditionalGeneration.from_pretrained(PIX2STRUCT_MODELS["large"])
 # PIX2STRUCT_LARGE_PROCESSOR = AutoProcessor.from_pretrained(PIX2STRUCT_MODELS["large"])
 
@@ -62,12 +66,13 @@ PIX2STRUCT_MODELS = {
 # LBLIP_PROCESSOR = LBLIP_PROCESSORS_LARGE["eval"]
 # LBLIP_MODEL = LBLIP_MODEL_LARGE
 
+
 # ONNX is not supported
 optimization = os.environ['OPTIMIZATION']
 if optimization == "TORCH_COMPILE":
     print("torch compile")
     # BLIP_MODEL = torch.compile(BLIP_MODEL)
-    GIT_MODEL = torch.compile(GIT_MODEL)
+    # GIT_MODEL = torch.compile(GIT_MODEL)
     # PIX2STRUCT_BASE_MODEL = torch.compile(PIX2STRUCT_BASE_MODEL)
     # PIX2STRUCT_LARGE_MODEL = torch.compile(PIX2STRUCT_LARGE_MODEL)
     # This does not improve LBLIP2

@@ -9,3 +9,6 @@ sacrebleu
 salesforce-lavis
 rouge_score
 streamlit
+optimum
+onnxruntime
+onnx
