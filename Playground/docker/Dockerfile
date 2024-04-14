@@ -13,8 +13,13 @@ RUN mkdir -p onnx
 COPY NER/build/onnx/SecureBERT_NER onnx/SecureBERT_NER
 COPY Image-Captioning/build/onnx/pix2struct_base onnx/pix2struct_base
 
-COPY Image-Captioning/src/app/cache_model.py .
-RUN python cache_model.py
+RUN mkdir -p models
+COPY Image-Captioning/models/lavis-blip-base models/lavis-blip-base
+COPY Image-Captioning/build/blip_caption_base_coco.yaml models/lavis-blip-base
+COPY Image-Captioning/build/med_config.json models/lavis-blip-base
+
+COPY Image-Captioning/build/cache_tokenizer.py .
+RUN python cache_tokenizer.py
 
 FROM base as build
 

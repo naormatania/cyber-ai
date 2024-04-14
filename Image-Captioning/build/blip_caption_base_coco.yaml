@@ -2,8 +2,8 @@ model:
   arch: blip_caption
   load_finetuned: True
 
-  pretrained: "models/model_base_capfilt_large.pth"
-  finetuned: "models/blip_coco_caption_base.pth"
+  pretrained: "/app/models/lavis-blip-base/model_base_capfilt_large.pth"
+  finetuned: "/app/models/lavis-blip-base/blip_coco_caption_base.pth"
 
   # vit encoder
   vit_type: "base"
@@ -13,7 +13,7 @@ model:
   image_size: 384
 
   # bert config
-  med_config_path: "configs/models/med_config.json"
+  med_config_path: "/app/models/lavis-blip-base/med_config.json"
 
   # generation configs
   prompt: "a picture of "

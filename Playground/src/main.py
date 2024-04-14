@@ -1,7 +1,9 @@
 from optimum.onnxruntime import ORTModelForPix2Struct
 import torch
 from PIL import Image
+from lavis.common.registry import registry
 from lavis.models import load_model_and_preprocess, load_model
+from lavis.models.blip_models.blip_caption import BlipCaption
 from transformers import Pix2StructProcessor
 from tner import TransformersNER
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
@@ -43,8 +45,13 @@ def init_pytorch():
 
 @st.cache_resource
 def get_blip_model_processor():
-    # TODO: change load_model_and_preprocess to load_model (if it is we can just pickle/unpickle the preprocessor): 27.57971429824829s to 15.835256338119507s
-    model, vis_processors, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True, device=DEVICE)
+    # Use https://github.com/salesforce/LAVIS/issues/176#issuecomment-1459623682
+    #model, vis_processors, _ = load_model_and_preprocess(name="blip_caption", model_type="base_coco", is_eval=True, device=DEVICE)
+    model_name = "blip_caption"
+    model_type = "base_coco"
+    model_class = registry.get_model_class(model_name)
+    model_class.PRETRAINED_MODEL_CONFIG_DICT[model_type] = "/app/models/lavis-blip-base/blip_caption_base_coco.yaml"
+    model, vis_processors, _ = load_model_and_preprocess(name=model_name, model_type=model_type, is_eval=True, device=DEVICE)
     return model, vis_processors["eval"]
 
 @st.cache_resource
@@ -60,21 +67,16 @@ def convert_df(df):
 
 init_pytorch()
 
-NI_MODEL, NI_PROCESSOR = get_blip_model_processor()
-SC_MODEL, SC_PROCESSOR = get_pix2struct_model_processor()
-MODEL = get_model()
-TOKENIZER = get_tokenizer()
-
-def ni_captions(images):
-    inputs = [NI_PROCESSOR(image).unsqueeze(0).to(DEVICE) for image in images]
+def ni_captions(processor, model, images):
+    inputs = [processor(image).unsqueeze(0).to(DEVICE) for image in images]
     inputs = torch.stack(inputs).squeeze(1).to(DEVICE)
-    out = NI_MODEL.generate({"image": inputs}, num_beams=1, max_length=500)
+    out = model.generate({"image": inputs}, num_beams=1, max_length=500)
     return [s.strip() for s in out]
 
-def sc_captions(images):
-    inputs = SC_PROCESSOR(images=images, return_tensors="pt").to(DEVICE)
-    out = SC_MODEL.generate(**inputs, max_new_tokens=500)
-    return [s.strip() for s in SC_PROCESSOR.batch_decode(out, skip_special_tokens=True)]
+def sc_captions(processor, model, images):
+    inputs = processor(images=images, return_tensors="pt").to(DEVICE)
+    out = model.generate(**inputs, max_new_tokens=500)
+    return [s.strip() for s in processor.batch_decode(out, skip_special_tokens=True)]
 
 def gen_chunk_512(tokenizer, text):
     spans = list(pt().span_tokenize(text))
@@ -102,9 +104,9 @@ def gen_chunk_512(tokenizer, text):
             previous_stride_num_tokens = previous_stride_num_tokens[1:]
     yield chunk
 
-def chunk_to_entities(chunk):
+def chunk_to_entities(model, chunk):
     entities_tuples = []
-    res = MODEL.predict([chunk])
+    res = model.predict([chunk])
     last_previous_position = -1
     previous_type = None
     for entity in res['entity_prediction'][0]:
@@ -144,6 +146,8 @@ def get_docx_text(uploaded_file):
     return '\n'.join(full_text)
 
 def ner_layout(left_column, right_column):
+    MODEL = get_model()
+    TOKENIZER = get_tokenizer()
     texts = {}
     uploaded_files = left_column.file_uploader("", type=["txt", "docx"], accept_multiple_files=True)
     for uploaded_file in uploaded_files:
@@ -164,7 +168,7 @@ def ner_layout(left_column, right_column):
             progress_text = f'Operation in progress for {name}. Please wait.'
             progress_bar = right_column.progress(0, text=progress_text)
             for i, chunk in enumerate(chunks):
-                entities_tuples.extend(chunk_to_entities(chunk))
+                entities_tuples.extend(chunk_to_entities(MODEL, chunk))
                 progress_bar.progress(i * 1.0 / len(chunks), text=progress_text)
             df = to_showable_pandas(entities_tuples)
             progress_bar.empty()
@@ -186,6 +190,11 @@ def captioning_layout(left_column, right_column):
         "Model",
         ["Natural Images", "Screenshots (Mobile/Desktop)"],
     )
+    if model == "Natural Images":
+        NI_MODEL, NI_PROCESSOR = get_blip_model_processor()
+    else:
+        NI_MODEL, NI_PROCESSOR = get_blip_model_processor()
+        SC_MODEL, SC_PROCESSOR = get_pix2struct_model_processor()
 
     file_names = []
     images = []
@@ -201,9 +210,9 @@ def captioning_layout(left_column, right_column):
         for i, (file_name, image) in enumerate(zip(file_names, images)):
             progress_bar.progress(i * 1.0 / len(file_names), text=progress_text(file_name))
             if model == "Natural Images":
-                captions.append(ni_captions([image])[0])
+                captions.append(ni_captions(NI_PROCESSOR, NI_MODEL, [image])[0])
             else:
-                captions.append(sc_captions([image])[0] + "; " + ni_captions([image])[0])
+                captions.append(sc_captions(SC_PROCESSOR, SC_MODEL, [image])[0] + "; " + ni_captions(NI_PROCESSOR, NI_MODEL, [image])[0])
         progress_bar.empty()
         right_column.image(uploaded_files[0], caption=f'{file_names[0]}: {captions[0]}')
         df = pd.DataFrame({"file_name": file_names, "caption": captions}).set_index('file_name')
