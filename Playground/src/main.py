@@ -1,7 +1,8 @@
 import torch
 from PIL import Image
 from lavis.models import load_model_and_preprocess, load_model
-from transformers import Pix2StructForConditionalGeneration, Pix2StructProcessor
+from transformers import Pix2StructProcessor
+from optimum.onnxruntime import ORTModelForPix2Struct
 from tner import TransformersNER
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import SECNER_LABEL2ID, SECNER_LABEL2NAME
@@ -28,7 +29,7 @@ def get_model():
 
 @st.cache_resource
 def get_tokenizer():
-   return AutoTokenizer.from_pretrained('models/SecureBERT-NER/')
+   return AutoTokenizer.from_pretrained('onnx/SecureBERT_NER/')
 
 @st.cache_data
 def convert_df(df):
@@ -48,8 +49,8 @@ def get_blip_model_processor():
 
 @st.cache_resource
 def get_pix2struct_model_processor():
-    model_id = "models/pix2struct-base"
-    model = Pix2StructForConditionalGeneration.from_pretrained(model_id, use_safetensors=True)
+    model_id = "onnx/pix2struct_base"
+    model = ORTModelForPix2Struct.from_pretrained(model_id)
     processor = Pix2StructProcessor.from_pretrained(model_id, is_vqa=False)
     return model, processor
 
@@ -215,7 +216,8 @@ def captioning_layout(left_column, right_column):
             mime='text/csv',
         )
 
-app = st.sidebar.radio('app', ['Cyber entities extraction', 'Image Captioning'])
+st.sidebar.title("App")
+app = st.sidebar.radio('', ['Cyber entities extraction', 'Image Captioning'])
 
 st.title(app)
 left_column, right_column = st.columns(2)
