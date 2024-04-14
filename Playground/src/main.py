@@ -1,8 +1,8 @@
+from optimum.onnxruntime import ORTModelForPix2Struct
 import torch
 from PIL import Image
 from lavis.models import load_model_and_preprocess, load_model
 from transformers import Pix2StructProcessor
-from optimum.onnxruntime import ORTModelForPix2Struct
 from tner import TransformersNER
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import SECNER_LABEL2ID, SECNER_LABEL2NAME
