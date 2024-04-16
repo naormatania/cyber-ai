@@ -20,7 +20,7 @@ DOCKER_BUILDKIT=1 docker build -t localbuild:streamlit --target build -f docker/
 ## Export pix2struct as onnx
 In `build/`:
 ```
-git clone git@github.com:naormatania/optimum.git
+git clone git@github.com:huggingface/optimum.git
 ```
 In `build/optimum`:
 ```
@@ -31,16 +31,3 @@ In `build`:
 ```
 ./optimum/optimum-cli export onnx -m google/pix2struct-screen2words-base --optimize O3 onnx/pix2struct_base
 ```
-
-## Triton
-```
-cd docs/examples
-./fetch_models.sh
-```
-and save in `/full/path/to/docs/examples/model_repository`
-and then run:
-```
-docker run --rm -p8000:8000 -p8001:8001 -p8002:8002 -v/full/path/to/docs/examples/model_repository:/models nvcr.io/nvidia/tritonserver:24.03-py3 tritonserver --model-repository=/models
-pip install tritonclient[all]
-```
-Relevant example for usage: https://github.com/triton-inference-server/client/blob/main/src/python/examples/image_client.py
