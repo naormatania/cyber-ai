@@ -12,15 +12,13 @@ from transformers import Pix2StructProcessor
 from PIL import Image
 import numpy as np
 import torch.nn.functional as F
+import torch
 
 triton_client = httpclient.InferenceServerClient(url='127.0.0.1:8000', concurrency=1)
 model_metadata = triton_client.get_model_metadata(model_name='pix2struct', model_version='1')
 model_config = triton_client.get_model_config(model_name='pix2struct', model_version='1')
 inputs_metadata = model_metadata["inputs"]
 outputs_metadata = model_metadata["outputs"]
-
-inputs[0].set_data_from_numpy(batched_image_data)
-outputs = [client.InferRequestedOutput(output_name, class_count=FLAGS.classes)]
 
 images = [Image.open("../Image-Captioning/datasets/desktop-ui-dataset/images/access-data-source-admin.png")]
 processor = Pix2StructProcessor.from_pretrained('google/pix2struct-screen2words-base', is_vqa=False)
