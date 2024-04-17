@@ -18,8 +18,7 @@ COPY Image-Captioning/models/lavis-blip-base models/lavis-blip-base
 COPY Image-Captioning/build/blip_caption_base_coco.yaml models/lavis-blip-base
 COPY Image-Captioning/build/med_config.json models/lavis-blip-base
 
-# TODO: to prevent network access during build - run script before docker build and copy ~/.cache/huggingface/hub/models--bert-base-uncased inside
-# use from_pretrained with cache_dir argument to save the model to upload 
+# TODO: to prevent network access during build we need to change LAVIS so it load tokenizer from disk 
 COPY Image-Captioning/build/cache_tokenizer.py .
 RUN python cache_tokenizer.py
 
