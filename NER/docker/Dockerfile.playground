@@ -1,0 +1,30 @@
+FROM python:3.10 as base
+
+WORKDIR /app
+
+COPY playground_requirements.txt ./requirements.txt
+
+RUN mkdir -p external_deps
+COPY external_deps external_deps
+
+RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
+
+RUN mkdir -p onnx
+COPY build/onnx/SecureBERT_NER onnx/SecureBERT_NER
+
+FROM base as build
+
+COPY src .
+COPY src/app/playground.py main.py
+
+ENV TQDM_DISABLE 1
+ENV INTRAOP_THREADS 4
+ENV INTEROP_THREADS 4
+
+ARG PORT
+ENV PORT ${PORT}
+
+
+# Run main.py when the container launches
+ENV CMDLINE "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+CMD ${CMDLINE}

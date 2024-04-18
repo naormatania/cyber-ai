@@ -1,0 +1,32 @@
+services:
+  playground:
+    build:
+      context: .
+      dockerfile: Playground/docker/Dockerfile
+    environment:
+      IMAGE_CAPTIONING_ADDRESS: image:8000
+      NER_ADDRESS: ner:8001
+    ports:
+      - '8501:8501'
+    restart: "no"
+    depends_on:
+      - image
+      - ner
+  image:
+    build:
+      context: Image-Captioning
+      dockerfile: docker/Dockerfile.playground
+      args:
+        PORT: 8000
+    expose:
+      - 8000
+    restart: "no"
+  ner:
+    build:
+      context: NER
+      dockerfile: docker/Dockerfile.playground
+      args:
+        PORT: 8001
+    expose:
+      - 8001
+    restart: "no"

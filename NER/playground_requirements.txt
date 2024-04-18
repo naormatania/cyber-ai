@@ -1,0 +1,5 @@
+./external_deps/tner-onnx
+fastapi==0.65.2
+uvicorn
+optimum
+nltk

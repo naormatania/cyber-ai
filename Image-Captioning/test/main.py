@@ -50,7 +50,7 @@ def caption_batch(batch):
     param_name = 'min_length' if args.model == 'blip-lavis' else 'min_new_tokens'
     r = requests.post(f'http://127.0.0.1:8000/caption/{args.model}?{param_name}={args.min_new_tokens}', files=files)
   else:
-    r = requests.post(f'http://127.0.0.1:8000/caption/{args.model}', files=files)    
+    r = requests.post(f'http://127.0.0.1:8000/caption/{args.model}', files=files)
   elapsed_time = time.time()-before
   captions = r.json()['captions'][0]
   print(captions)

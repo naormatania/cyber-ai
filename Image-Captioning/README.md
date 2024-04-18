@@ -16,18 +16,3 @@ python3 test/main.py blip --batch_size=12
 DOCKER_BUILDKIT=1 docker build --target base -f docker/Dockerfile.streamlit .
 DOCKER_BUILDKIT=1 docker build -t localbuild:streamlit --target build -f docker/Dockerfile.streamlit . && docker run -p 8501:8501 -it localbuild:streamlit
 ```
-
-## Export pix2struct as onnx
-In `build/`:
-```
-git clone git@github.com:huggingface/optimum.git
-```
-In `build/optimum`:
-```
-python3 setup.py develop
-cp /usr/local/bin/optimum-cli .
-```
-In `build`:
-```
-./optimum/optimum-cli export onnx -m google/pix2struct-screen2words-base --optimize O3 onnx/pix2struct_base
-```

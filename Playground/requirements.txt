@@ -1,11 +1,3 @@
-safetensors
-transformers==4.28.0
-./external_deps/tner-onnx
-optimum
-onnxruntime
-onnx
-nltk
 python-docx
 pillow
-salesforce-lavis
 streamlit

@@ -1,0 +1,10 @@
+safetensors
+transformers==4.28.0
+optimum
+onnxruntime
+onnx
+pillow
+salesforce-lavis
+fastapi
+uvicorn
+python-multipart

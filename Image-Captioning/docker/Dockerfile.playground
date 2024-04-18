@@ -1,0 +1,35 @@
+FROM python:3.10 as base
+
+WORKDIR /app
+
+COPY playground_requirements.txt ./requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache pip install -r requirements.txt
+
+RUN mkdir -p onnx
+COPY build/onnx/pix2struct_base onnx/pix2struct_base
+
+RUN mkdir -p models
+COPY models/lavis-blip-base models/lavis-blip-base
+COPY build/blip_caption_base_coco.yaml models/lavis-blip-base
+COPY build/med_config.json models/lavis-blip-base
+
+# TODO: to prevent network access during build we need to change LAVIS so it load tokenizer from disk 
+COPY build/cache_tokenizer.py .
+RUN python cache_tokenizer.py
+
+COPY build/resources resources
+
+FROM base as build
+
+COPY src/app/playground.py main.py
+
+ENV INTRAOP_THREADS 4
+ENV INTEROP_THREADS 4
+
+ARG PORT
+ENV PORT ${PORT}
+
+# Run main.py when the container launches
+ENV CMDLINE "uvicorn main:app --host 0.0.0.0 --port ${PORT}"
+CMD ${CMDLINE}
