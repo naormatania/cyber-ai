@@ -6,6 +6,7 @@ import docx
 import requests
 import json
 import os
+import time
 
 BUTTON_DISABLED = True
 NER_ADDRESS = os.environ['NER_ADDRESS']
@@ -21,9 +22,18 @@ def convert_df(df):
 def convert_df(df):
     return df.to_csv().encode('utf-8')
 
-def ner(text):
-    r = requests.post(f'http://{NER_ADDRESS}/ner/', data=json.dumps({'text': text}))
-    return r.json()['entities']
+def ner(text, progress_bar, progress_text):
+    r = requests.post(f'http://{NER_ADDRESS}/start_task/', data=json.dumps({'text': text}))
+    task_id = r.json()['task_id']
+    while True:
+        r = requests.post(f'http://{NER_ADDRESS}/get_result/', data=json.dumps({'task_id': task_id}))
+        resp = r.json()
+        if 'task_progress' in resp:
+            task_progress = resp['task_progress']
+            progress_bar.progress(task_progress, text=progress_text)
+            if task_progress == 1:
+                return resp['entities']
+        time.sleep(1)
 
 def image_captioning(file_name, uploaded_file, type):
     #files = [('files', (os.path.basename(path), open(path, 'rb'), 'image/jpeg'))]
@@ -78,9 +88,10 @@ def ner_layout(left_column, right_column):
     if left_column.button('Process', disabled=len(texts)==0):
         all_dfs = []
         for name, text in texts.items():
-            # TODO: add progress bar by using polling
-            # (https://www.datasciencebyexample.com/2023/08/26/handling-long-running-tasks-in-fastapi-python/) 
-            entities_tuples = ner(text)
+            progress_text = f'Operation in progress for {name}. Please wait.'
+            progress_bar = right_column.progress(0, text=progress_text)
+            entities_tuples = ner(text, progress_bar, progress_text)
+            progress_bar.empty()
             df = to_showable_pandas(entities_tuples)
             right_column.write(f'{name}:')
             right_column.dataframe(df, width=1200)

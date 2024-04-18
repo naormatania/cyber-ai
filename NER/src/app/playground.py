@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from tner import TransformersNER
 from nltk.tokenize.punkt import PunktSentenceTokenizer as pt
 from models.consts import SECNER_LABEL2ID
@@ -6,8 +6,13 @@ from transformers import AutoTokenizer
 from collections import namedtuple
 import pandas as pd
 import os
+import string
+import random
 
 STRIDE_SIZE = 1
+
+tasks_progress = {}
+task_entities = {}
 
 Entity = namedtuple("Entity", "type text start_span end_span")
 
@@ -24,6 +29,9 @@ MODEL = get_model()
 TOKENIZER = get_tokenizer()
 
 app = FastAPI()
+
+def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def gen_chunk_512(tokenizer, text):
     spans = list(pt().span_tokenize(text))
@@ -67,8 +75,17 @@ def chunk_to_entities(model, chunk):
         previous_type = entity['type']
     return entities_tuples
 
-@app.post('/ner/')
-async def securebert_ner_endpoint(request: Request):
+def process_chunks(task_id, chunks):
+    task_entities[task_id] = 0
+    entities_tuples = []
+    for i, chunk in enumerate(chunks):
+        entities_tuples.extend(chunk_to_entities(MODEL, chunk))
+        tasks_progress[task_id] = i*1.0/len(chunks)
+    tasks_progress[task_id] = 1
+    task_entities[task_id] = entities_tuples
+
+@app.post('/start_task/')
+async def start_ner_endpoint(request: Request, background_tasks: BackgroundTasks):
     data = await request.json()
     text = data.get('text', '')
 
@@ -76,12 +93,25 @@ async def securebert_ner_endpoint(request: Request):
         return {'error': 'Text to process not found'}
     
     chunks = gen_chunk_512(TOKENIZER, text)
+    task_id = id_generator()
+
+    background_tasks.add_task(process_chunks, task_id, list(chunks))
     
-    entities_tuples = []
-    for chunk in chunks:
-        entities_tuples.extend(chunk_to_entities(MODEL, chunk))
+    return {'task_id': task_id}
+
+@app.post('/get_result/')
+async def start_ner_endpoint(request: Request):
+    data = await request.json()
+    task_id = data.get('task_id', '')
+
+    if not task_id or task_id not in tasks_progress:
+        return {'error': 'Task id not found'}
     
-    return {'entities': entities_tuples}
+    progress = tasks_progress[task_id]
+    if progress != 1:
+        return {'task_progress': progress}
+    else:
+        return {'task_progress': tasks_progress.pop(task_id), 'entities': task_entities.pop(task_id)}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.environ['PORT'], debug=True)
